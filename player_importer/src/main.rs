@@ -8,6 +8,7 @@ use std::{collections::HashMap, fs::File, io::BufReader};
 
 #[derive(Debug, Deserialize)]
 struct Team {
+    id: i32,
     #[serde(flatten)]
     players: HashMap<String, String>,
 }
@@ -65,6 +66,19 @@ struct ClassStats {
     total_time: i32,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Deserialize)]
+struct TeamData {
+    score: i8,
+    kills: i8,
+    deaths: i8,
+    dmg: i16,
+    charges: i8,
+    drops: i8,
+    firstcaps: i8,
+    caps: i8,
+}
+
 // Log result by logs.tf/json/:id
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -76,6 +90,48 @@ struct LogSerialized {
     names: Value,
     rounds: Value,
     info: Value,
+}
+
+#[derive(Debug, Deserialize)]
+struct RglApiTeamInfo {
+    id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+struct RglApiResult {
+    currentTeams: HashMap<String, RglApiTeamInfo>,
+}
+
+async fn determine_team_ids_for_match(
+    player_map: HashMap<String, PlayerStats>,
+) -> (Option<i32>, Option<i32>) {
+    // Separate teams
+    let mut red_players: Vec<String> = Vec::new();
+    let mut blu_players: Vec<String> = Vec::new();
+
+    for (id, player) in player_map.iter() {
+        let id64 = steam_id::from_steamid3(id.clone()).unwrap().to_string();
+        if player.team.eq("Red") {
+            red_players.push(id64);
+        } else {
+            blu_players.push(id64);
+        }
+    }
+
+    for player in red_players {
+        let res: RglApiResult =
+            match reqwest::get(format!("https://api.rgl.gg/v0/player/{}", player)).await {
+                Ok(x) => match x.json().await {
+                    Ok(x) => x,
+                    Err(_) => panic!("a"),
+                },
+                Err(_) => panic!("aa"),
+            };
+        let id = res.currentTeams.get("sixes").unwrap().id;
+        println!("{:?}", id);
+    }
+
+    return (Some(1), Some(2));
 }
 
 #[tokio::main]
@@ -149,9 +205,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     println!("{:#?}", log);
 
-    for (player_id_3, PlayerStats) in log.players.iter() {
-        // convert steamid3 to steamid64
-    }
+    determine_team_ids_for_match(log.players).await;
+
     // let logs_sorted: Vec<&LogView> = logs_cache
     //     .values()
     //     .sorted_by(|a, b| a.id.cmp(&b.id))

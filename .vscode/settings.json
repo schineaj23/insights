@@ -15,5 +15,6 @@
         "headshots",
         "reqwest",
         "ubers"
-    ]
+    ],
+    "cSpell.enabled": false
 }
