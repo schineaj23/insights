@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Local DB",
+            "database": "insights-dev",
+            "username": "postgres"
+        }
+    ],
+    "cSpell.words": [
+        "froyotech",
+        "headshots",
+        "reqwest",
+        "ubers"
+    ]
+}
