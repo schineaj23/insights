@@ -1,15 +1,16 @@
 mod steam_id;
 
+use cached::proc_macro::cached;
 use core::time;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::Value;
 use std::{collections::HashMap, fs::File, io::BufReader};
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct Team {
     id: i32,
-    #[serde(flatten)]
     players: HashMap<String, String>,
 }
 
@@ -92,19 +93,36 @@ struct LogSerialized {
     info: Value,
 }
 
-#[derive(Debug, Deserialize)]
-struct RglApiTeamInfo {
-    id: i32,
+#[cached(size = 50)]
+async fn fetch_team_id_for_player(player_id: String) -> i64 {
+    let res: HashMap<String, Value> =
+        match reqwest::get(format!("https://api.rgl.gg/v0/profile/{}", player_id)).await {
+            Ok(response) => match response.json().await {
+                Ok(map) => map,
+                Err(_) => return 0,
+            },
+            Err(_) => return 0,
+        };
+
+    res["currentTeams"]["sixes"]["id"].as_i64().unwrap()
 }
 
-#[derive(Debug, Deserialize)]
-struct RglApiResult {
-    currentTeams: HashMap<String, RglApiTeamInfo>,
+async fn get_first_duplicate_id(player_ids: Vec<String>) -> Option<i64> {
+    let mut last_id: i64 = 0;
+    for player in player_ids {
+        let id = fetch_team_id_for_player(player).await;
+        if id == last_id {
+            return Some(id);
+        }
+        last_id = id;
+    }
+    None
 }
 
 async fn determine_team_ids_for_match(
     player_map: HashMap<String, PlayerStats>,
-) -> (Option<i32>, Option<i32>) {
+) -> Result<(i32, i32), Box<dyn std::error::Error>> {
+    println!("determine_team_ids_for_match called");
     // Separate teams
     let mut red_players: Vec<String> = Vec::new();
     let mut blu_players: Vec<String> = Vec::new();
@@ -118,20 +136,14 @@ async fn determine_team_ids_for_match(
         }
     }
 
-    for player in red_players {
-        let res: RglApiResult =
-            match reqwest::get(format!("https://api.rgl.gg/v0/player/{}", player)).await {
-                Ok(x) => match x.json().await {
-                    Ok(x) => x,
-                    Err(_) => panic!("a"),
-                },
-                Err(_) => panic!("aa"),
-            };
-        let id = res.currentTeams.get("sixes").unwrap().id;
-        println!("{:?}", id);
-    }
+    // Coming up with the naive solution until performance is an issue!
 
-    return (Some(1), Some(2));
+    let red_id = get_first_duplicate_id(red_players).await.unwrap();
+    let blu_id = get_first_duplicate_id(blu_players).await.unwrap();
+
+    println!("Found Red: {} Blue: {}", red_id, blu_id);
+
+    Ok((red_id as i32, blu_id as i32))
 }
 
 #[tokio::main]
@@ -171,7 +183,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut i = 1;
     for combination in player_ids.into_iter().combinations(6) {
-        println!("{:?} COMBINATION ITERATION {}", combination, i);
+        println!("{}: Trying {:?}", i, combination);
         i += 1;
 
         let url = format!("http://logs.tf/api/v1/log?player={}", combination.join(","));
@@ -193,7 +205,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::thread::sleep(time::Duration::from_millis(1000));
     }
 
-    println!("Unique Log Count: {}", logs_cache.len());
+    println!("Likely Scrim Log Count: {}", logs_cache.len());
 
     let random_log = match logs_cache.iter().next() {
         Some(x) => x.0,
@@ -205,14 +217,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     println!("{:#?}", log);
 
-    determine_team_ids_for_match(log.players).await;
-
-    // let logs_sorted: Vec<&LogView> = logs_cache
-    //     .values()
-    //     .sorted_by(|a, b| a.id.cmp(&b.id))
-    //     .collect();
-    // println!("{:#?}", logs_sorted);
-    // println!("Likely Scrim Logs: {:?}", logs_sorted.len());
+    let (red_team_id, blu_team_id) = determine_team_ids_for_match(log.players).await?;
+    // Now construct our sql query and put this into the database
 
     Ok(())
 }
