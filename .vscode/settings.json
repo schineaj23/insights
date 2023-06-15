@@ -10,11 +10,15 @@
             "username": "postgres"
         }
     ],
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    },
     "cSpell.words": [
         "froyotech",
         "headshots",
         "reqwest",
         "ubers"
     ],
-    "cSpell.enabled": false
+    "cSpell.enabled": false,
+    "editor.formatOnSave": true
 }
