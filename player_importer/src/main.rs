@@ -1,90 +1,60 @@
+mod collect;
 mod db;
 mod log;
+mod rgl;
 mod steam_id;
 
 use cached::proc_macro::cached;
-use core::time;
 use dotenv::dotenv;
-use itertools::Itertools;
 use log::PlayerStats;
+use reqwest::Response;
 use serde::Deserialize;
-use serde_json::Value;
-use std::{
-    collections::{HashMap, HashSet},
-    fs::File,
-    io::BufReader,
-    time::Instant,
-};
+use std::{collections::HashMap, fs::File, io::BufReader};
+use tokio::time::Instant;
 
-use crate::log::LogSerialized;
+use crate::{collect::Collector, log::LogSerialized};
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
-struct Team {
+pub struct Team {
     id: i32,
     players: HashMap<String, String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Deserialize)]
-struct LogsResult {
-    logs: Vec<LogView>,
-    parameters: Value,
-    results: i32,
-    success: bool,
-    total: i32,
-}
-
-// Calling this a "log view" since it is the small metadata returned from the log search api
-#[allow(dead_code)]
-#[derive(Debug, Deserialize, Clone)]
-struct LogView {
-    date: i32,
-    id: i32,
-    map: String,
-    players: i32,
-    title: String,
-    views: i32,
-}
-
-#[cached(size = 50)]
-async fn fetch_team_id_for_player(player_id: String) -> Option<i64> {
+#[cached(size = 200)]
+async fn fetch_team_id_for_player(player_id: String) -> Option<i32> {
     match get_team_id_from_player_lut(&player_id) {
         Some(team_id) => {
             println!("Found team_id from LUT");
             Some(team_id)
         }
-        _ => {
-            println!("Could not find team_id from LUT, sending req to RGL API");
-            let res: HashMap<String, Value> =
-                match reqwest::get(format!("https://api.rgl.gg/v0/profile/{}", player_id)).await {
-                    Ok(response) => match response.json().await {
-                        Ok(map) => map,
-                        Err(_) => return None,
-                    },
-                    Err(_) => return None,
-                };
+        None => {
+            println!(
+                "Could not find team_id from LUT, asking RGL API for player {}",
+                player_id
+            );
+            let res: Response =
+                reqwest::get(format!("https://api.rgl.gg/v0/profile/{}", player_id))
+                    .await
+                    .ok()?;
+            let player = res.json::<rgl::Player>().await.ok()?;
+            let team = player.current_teams.get("sixes")?;
 
-            res["currentTeams"]["sixes"]["id"].as_i64()
+            match team {
+                Some(team) => Some(team.id),
+                _ => None,
+            }
         }
     }
 }
 
-fn get_team_id_from_player_lut(player_id: &str) -> Option<i64> {
+fn get_team_id_from_player_lut(player_id: &str) -> Option<i32> {
     // TODO: cache this entire file in memory instead of reopening
-    let file = match File::open("/home/cat/src/insighttf/player_teamid_lut.json") {
-        Ok(x) => x,
-        Err(_) => return None,
-    };
+    let file = File::open("/home/cat/src/insighttf/player_teamid_lut.json").ok()?;
     let reader: BufReader<File> = BufReader::new(file);
-    let map: HashMap<String, i64> = match serde_json::from_reader(reader) {
-        Ok(x) => x,
-        Err(_) => return None,
-    };
-    match map.get(player_id) {
-        Some(team_id) => Some(*team_id),
-        _ => None,
-    }
+    let id_map: HashMap<String, i32> = serde_json::from_reader(reader).ok()?;
+
+    id_map.get(player_id).map(|x| *x)
 }
 
 async fn determine_team_ids_for_match(
@@ -97,7 +67,7 @@ async fn determine_team_ids_for_match(
     let mut last_blu_id = 0;
     let mut visited = 0;
     for (id, player) in player_map.iter() {
-        let id64 = steam_id::from_steamid3(id.clone()).unwrap().to_string();
+        let id64 = steam_id::from_steamid3(id).unwrap().to_string();
         let team_id = match fetch_team_id_for_player(id64).await {
             Some(id) => id,
             None => {
@@ -130,7 +100,7 @@ async fn determine_team_ids_for_match(
 
     println!("Found Red: {} Blue: {}", last_red_id, last_blu_id);
 
-    Ok((last_red_id as i32, last_blu_id as i32))
+    Ok((last_red_id, last_blu_id))
 }
 
 #[tokio::main]
@@ -147,54 +117,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let team_map: HashMap<String, Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
 
+    // Inserting teams
+    // for (team_name, team_data) in team_map.iter() {
+    //     db::insert_team(&pool, &team_name, &team_data.id).await?;
+    // }
+
+    // TODO: make the collecting and the adding on separate services so they don't block each other
+
+    // Mon May 15 2023 03:59:00 GMT+0000 (Team Registration Deadline)
+    // logs.tf offset does not appear to be working...
+    let mut collector = Collector::new(1684123140);
+    println!(
+        "Collected {} logs from file",
+        collector.import_from_file("log_cache.txt").await?
+    );
+    // let collected = collector.collect_all_team_logs(team_map).await?;
+
+    let logs_cache = collector.get_logs();
+
+    let log_collection_start = Instant::now();
+
+    let log_collection_time = log_collection_start.elapsed();
+    let log_insert_start = Instant::now();
+
     let pool = db::connect().await?;
-
-    for (team_name, team_data) in team_map.iter() {
-        db::insert_team(&pool, &team_name, &team_data.id).await?;
-    }
-
-    let player_ids: Vec<String> = team_map
-        .get("froyotech")
-        .unwrap()
-        .players
-        .values()
-        .cloned()
-        .collect();
-    println!("{:?}", player_ids);
-
-    // Should also compute permutations for scrims.
-    // Scrims defined as 4+ of the team playing on the same team (during scrim times) to account for ringers
-    // Add all these logs, use db to filter out duplicates. the amount of api calls -> nCr = n! / r!(n-r)!
-
-    let mut logs_cache: HashSet<i32> = HashSet::new();
-
-    let start_of_import = Instant::now();
-
-    let mut i = 1;
-    let mut duplicates = 0;
-    for combination in player_ids.into_iter().combinations(4) {
-        println!("{}: Trying {:?}", i, combination);
-        i += 1;
-
-        let url = format!("http://logs.tf/api/v1/log?player={}", combination.join(","));
-        println!("{}", url);
-
-        let resp_json: LogsResult = reqwest::get(url).await?.json::<LogsResult>().await?;
-
-        // Add logs to log cache, which we will be adding to our DB
-        resp_json.logs.iter().for_each(|x| {
-            // Mon May 15 2023 03:59:00 GMT+0000 (Team Registration Deadline)
-            // offset does not appear to be working...
-            if x.date > 1684123140 {
-                if !logs_cache.insert(x.id) {
-                    duplicates += 1;
-                }
-            }
-        });
-
-        // Sleep so we don't get rate limited
-        std::thread::sleep(time::Duration::from_millis(500));
-    }
 
     for log_id in logs_cache.iter() {
         println!("Making request to logs.tf");
@@ -205,22 +151,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?
             .json::<LogSerialized>()
             .await?;
-        println!("Request recieved from logs.tf");
+        println!(
+            "Request recieved from logs.tf in {} seconds",
+            start_time.elapsed().as_secs_f32()
+        );
 
         let (red_team_id, blu_team_id) = determine_team_ids_for_match(&log.players).await?;
 
         db::insert_log(&pool, &log_id, &(red_team_id, blu_team_id), &log).await?;
-
-        let duration = start_time.elapsed();
         println!("Added log {} to db", log_id);
-        println!("Individual log took {} seconds", duration.as_secs_f32());
+
+        for (player_id, stats) in log.players.iter() {
+            let start_time = Instant::now();
+
+            let player_id = steam_id::from_steamid3(player_id).unwrap();
+
+            // If it is a ringer, just ignore we don't care. It would probably throw an error in DB anyways
+            let team_id = match fetch_team_id_for_player(player_id.to_string()).await {
+                Some(id) => id,
+                None => {
+                    println!("Skipping ringer {}", player_id);
+                    continue;
+                }
+            };
+
+            db::insert_player(&pool, &player_id, &team_id).await?;
+            db::insert_player_stats(&pool, log_id, &player_id, stats).await?;
+
+            println!(
+                "Took {} seconds to insert player stats",
+                start_time.elapsed().as_secs_f32()
+            );
+        }
     }
 
-    println!("Likely Scrim Log Count: {}", logs_cache.len());
-    println!("Duplicate logs: {}", duplicates);
+    println!("Likely scrim log count: {}", logs_cache.len());
     println!(
-        "Total import of log time for froyotech: {} seconds",
-        start_of_import.elapsed().as_secs_f32()
+        "Log collection time: {} seconds",
+        log_collection_time.as_secs_f32()
     );
+    println!(
+        "Log insert time: {} seconds",
+        log_insert_start.elapsed().as_secs_f32()
+    );
+    println!(
+        "Total time elapsed: {} seconds",
+        log_collection_start.elapsed().as_secs_f32()
+    );
+
     Ok(())
 }

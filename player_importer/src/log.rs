@@ -64,5 +64,5 @@ pub struct LogSerialized {
 #[derive(Debug, Deserialize)]
 pub struct LogInfo {
     pub map: String,
-    pub date: i64,
+    pub date: i32,
 }
