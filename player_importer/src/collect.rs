@@ -9,7 +9,12 @@ use serde::Deserialize;
 use serde_json::Value;
 use tokio::time::Instant;
 
-use crate::Team;
+#[allow(dead_code)]
+#[derive(Debug, Deserialize)]
+pub struct Team {
+    id: i32,
+    players: HashMap<String, String>,
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]

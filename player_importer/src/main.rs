@@ -10,18 +10,10 @@ use dotenv::dotenv;
 use log::PlayerStats;
 use pico_args::Arguments;
 use reqwest::Response;
-use serde::Deserialize;
 use std::{collections::HashMap, fs::File, io::BufReader};
 use tokio::time::Instant;
 
 use crate::{collect::Collector, log::LogSerialized};
-
-#[allow(dead_code)]
-#[derive(Debug, Deserialize)]
-pub struct Team {
-    id: i32,
-    players: HashMap<String, String>,
-}
 
 #[cached(size = 200)]
 async fn fetch_team_id_for_player(player_id: String) -> Option<i32> {
@@ -141,7 +133,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file = File::open(args.team_list_path)?;
     let reader = BufReader::new(file);
 
-    let team_map: HashMap<String, Team> = serde_json::from_reader(reader)?;
+    let team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
 
     // Inserting teams
