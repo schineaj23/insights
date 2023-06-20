@@ -1,7 +1,7 @@
 # TODO LIST
-- Get list of all players (INVITE DONE & advanced) 
-- Get ONLY SCRIM logs, (make sure that the core players are on the same team, around scrim times) after end of season, so data is recent
-- Ensure no duplicates
+- DONE: Get list of all players (INVITE DONE & advanced) 
+- DONE: Get ONLY SCRIM logs, (make sure that the core players are on the same team, around scrim times) after end of season, so data is recent
+- DONE: Ensure no duplicates 
 
 What would I need to store?
 - teams involved
@@ -15,9 +15,18 @@ I believe getting all the logs then organizing it in schema -> to db is better +
 
 
 Later
-- Put into DB, (find DB to use start learning it)
+- DONE: Put into DB, (find DB to use start learning it)
 - Extract insights, predicting who will win by round, etc
 - Generate power rankings
+
+Win percentage across maps, adjusted for each opponent
+
+Advanced stats that I want to track:
+- Sac efficiency (times that sac killed/forced medic, or killed demoman)
+  This has to be only when people
+- Stalemate breaks
+- Team fight (dry fights/mids) %
+- Uber fight %
 
 Very Long down the road...
 - Real-time score prediction/round prediction based on current gamestate 
