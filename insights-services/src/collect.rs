@@ -12,8 +12,8 @@ use tokio::time::Instant;
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct Team {
-    id: i32,
-    players: HashMap<String, String>,
+    pub id: i32,
+    pub players: HashMap<String, String>,
 }
 
 #[allow(dead_code)]
