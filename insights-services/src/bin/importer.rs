@@ -98,25 +98,49 @@ async fn determine_team_ids_for_match(
 struct Args {
     fetch_new_logs: bool,
     dump_log_cache: bool,
+    insert_into_db: bool,
     team_list_path: String,
-    log_cache_path: Option<String>,
+    read_logs_path: Option<String>,
     offset: i32,
 }
 
 fn parse_args() -> Result<Args, pico_args::Error> {
-    let mut env_args = Arguments::from_env();
+    let help: &str =
+        "USAGE: importer -t | --team-list FILE [-fdi] [-o | --offset NUMBER] [-r | --read FILE]
+        -t --team-list  Read teams and players from JSON file
+        [-f --fetch]    Fetch new logs from logs.tf
+        [-d --dump]     Dump fetched logs to file
+        [-i --insert]   Insert collected logs into database
+        [-o --offset]   Minimum date of log in Unix timestamp 
+        [-r --read]     Read log ids from file separated by newlines
+    ";
+    let mut args: Vec<_> = std::env::args_os().collect();
+    args.remove(0);
+
+    if args.len() == 0 {
+        println!("{}", help);
+        std::process::exit(-1);
+    }
+
+    let mut env_args = Arguments::from_vec(args);
+
+    if env_args.contains(["-h", "--help"]) {
+        println!("{}", help);
+        std::process::exit(-1);
+    }
 
     // Mon May 15 2023 03:59:00 GMT+0000 (S12 Team Registration Deadline) = 1684123140
     let args = Args {
         fetch_new_logs: env_args.contains(["-f", "--fetch"]),
         dump_log_cache: env_args.contains(["-d", "--dump"]),
+        insert_into_db: env_args.contains(["-i", "--insert"]),
         team_list_path: env_args
             .value_from_str(["-t", "--team-list"])
             .unwrap_or_else(|_| std::env::var("TEAM_LIST_PATH").expect("TEAM_LIST_PATH not set")),
         offset: env_args
             .value_from_fn(["-o", "--offset"], |x| x.parse::<i32>())
             .unwrap_or(1684123140),
-        log_cache_path: env_args.opt_value_from_str(["-c", "--cache"])?,
+        read_logs_path: env_args.opt_value_from_str(["-r", "--read"])?,
     };
 
     Ok(args)
@@ -149,7 +173,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut collector = Collector::new(args.offset);
 
-    if let Some(cache_path) = args.log_cache_path {
+    if let Some(cache_path) = args.read_logs_path {
         println!(
             "Collected {} logs from file",
             collector.import_from_file(&cache_path).await?
@@ -171,6 +195,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log_insert_start = Instant::now();
 
     let pool = db::connect().await?;
+
+    if !args.insert_into_db {
+        return Ok(());
+    }
 
     for log_id in logs_cache.iter() {
         println!("Making request to logs.tf");
