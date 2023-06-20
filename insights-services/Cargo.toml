@@ -1,9 +1,17 @@
 [package]
-name = "player_importer"
+name = "insights-services"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "insights"
+path = "src/lib.rs"
+
+[[bin]]
+name = "importer"
+path = "src/bin/importer.rs"
 
 [dependencies]
 reqwest = { version = "0.11.18", features = ["json"] }

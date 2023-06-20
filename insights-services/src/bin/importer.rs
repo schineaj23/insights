@@ -1,19 +1,17 @@
-mod collect;
-mod db;
-mod log;
-mod rgl;
-mod steam_id;
-
 use cached::proc_macro::cached;
 use chrono::NaiveDateTime;
 use dotenv::dotenv;
-use log::PlayerStats;
+use insights::collect;
+use insights::collect::Collector;
+use insights::db;
+use insights::log::LogSerialized;
+use insights::log::PlayerStats;
+use insights::rgl;
+use insights::steam_id;
 use pico_args::Arguments;
 use reqwest::Response;
 use std::{collections::HashMap, fs::File, io::BufReader};
 use tokio::time::Instant;
-
-use crate::{collect::Collector, log::LogSerialized};
 
 #[cached(size = 200)]
 async fn fetch_team_id_for_player(player_id: String) -> Option<i32> {
@@ -97,7 +95,6 @@ async fn determine_team_ids_for_match(
     Ok((last_red_id, last_blu_id))
 }
 
-#[derive(Debug)]
 struct Args {
     fetch_new_logs: bool,
     dump_log_cache: bool,
@@ -109,7 +106,7 @@ struct Args {
 fn parse_args() -> Result<Args, pico_args::Error> {
     let mut env_args = Arguments::from_env();
 
-    // Mon May 15 2023 03:59:00 GMT+0000 (S11 Team Registration Deadline) = 1684123140
+    // Mon May 15 2023 03:59:00 GMT+0000 (S12 Team Registration Deadline) = 1684123140
     let args = Args {
         fetch_new_logs: env_args.contains(["-f", "--fetch"]),
         dump_log_cache: env_args.contains(["-d", "--dump"]),
@@ -238,8 +235,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Total time elapsed: {} seconds",
         log_collection_start.elapsed().as_secs_f32()
     );
-
-    // Save file remembering last
 
     Ok(())
 }
