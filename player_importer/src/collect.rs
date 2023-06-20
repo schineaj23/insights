@@ -35,7 +35,7 @@ struct LogView {
 
 pub struct Collector {
     log_id_cache: HashSet<i32>,
-    offset: i32,
+    pub offset: i32,
 }
 
 #[allow(dead_code)]

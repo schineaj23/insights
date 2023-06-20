@@ -5,8 +5,10 @@ mod rgl;
 mod steam_id;
 
 use cached::proc_macro::cached;
+use chrono::NaiveDateTime;
 use dotenv::dotenv;
 use log::PlayerStats;
+use pico_args::Arguments;
 use reqwest::Response;
 use serde::Deserialize;
 use std::{collections::HashMap, fs::File, io::BufReader};
@@ -103,15 +105,40 @@ async fn determine_team_ids_for_match(
     Ok((last_red_id, last_blu_id))
 }
 
+#[derive(Debug)]
+struct Args {
+    fetch_new_logs: bool,
+    dump_log_cache: bool,
+    team_list_path: String,
+    log_cache_path: Option<String>,
+    offset: i32,
+}
+
+fn parse_args() -> Result<Args, pico_args::Error> {
+    let mut env_args = Arguments::from_env();
+
+    // Mon May 15 2023 03:59:00 GMT+0000 (S11 Team Registration Deadline) = 1684123140
+    let args = Args {
+        fetch_new_logs: env_args.contains(["-f", "--fetch"]),
+        dump_log_cache: env_args.contains(["-d", "--dump"]),
+        team_list_path: env_args
+            .value_from_str(["-t", "--team-list"])
+            .unwrap_or_else(|_| std::env::var("TEAM_LIST_PATH").expect("TEAM_LIST_PATH not set")),
+        offset: env_args
+            .value_from_fn(["-o", "--offset"], |x| x.parse::<i32>())
+            .unwrap_or(1684123140),
+        log_cache_path: env_args.opt_value_from_str(["-c", "--cache"])?,
+    };
+
+    Ok(args)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    // this should have the players based on who is rostered via rgl api
-    // but since there are more rostered players than starters, use curated list
 
-    let path = std::env::var("PLAYER_LIST_PATH").expect("PLAYER_LIST_PATH not set");
-    let file = File::open(path)?;
-
+    let args = parse_args()?;
+    let file = File::open(args.team_list_path)?;
     let reader = BufReader::new(file);
 
     let team_map: HashMap<String, Team> = serde_json::from_reader(reader)?;
@@ -123,21 +150,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // }
 
     // TODO: make the collecting and the adding on separate services so they don't block each other
+    let log_collection_start = Instant::now();
 
-    // Mon May 15 2023 03:59:00 GMT+0000 (Team Registration Deadline)
-    // logs.tf offset does not appear to be working...
-    let mut collector = Collector::new(1684123140);
+    let date_time = NaiveDateTime::from_timestamp_opt(args.offset as i64, 0).unwrap();
     println!(
-        "Collected {} logs from file",
-        collector.import_from_file("log_cache.txt").await?
+        "Starting log collection from timestamp {}",
+        date_time.format("%d/%m/%Y %H:%M")
     );
-    // let collected = collector.collect_all_team_logs(team_map).await?;
+
+    let mut collector = Collector::new(args.offset);
+
+    if let Some(cache_path) = args.log_cache_path {
+        println!(
+            "Collected {} logs from file",
+            collector.import_from_file(&cache_path).await?
+        );
+    }
+
+    if args.fetch_new_logs {
+        collector.collect_all_team_logs(team_map).await?;
+    }
 
     let logs_cache = collector.get_logs();
 
-    let log_collection_start = Instant::now();
+    if args.dump_log_cache {
+        collector.dump_cache_to_file("dumped-logs.txt").await?;
+    }
 
     let log_collection_time = log_collection_start.elapsed();
+
     let log_insert_start = Instant::now();
 
     let pool = db::connect().await?;
@@ -151,6 +192,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?
             .json::<LogSerialized>()
             .await?;
+
+        // Why do we bother processing if it is past our offset anyways
+        if log.info.date < collector.offset {
+            println!("Log {} too old. Skipping...", log_id);
+            continue;
+        }
+
         println!(
             "Request recieved from logs.tf in {} seconds",
             start_time.elapsed().as_secs_f32()
@@ -198,6 +246,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Total time elapsed: {} seconds",
         log_collection_start.elapsed().as_secs_f32()
     );
+
+    // Save file remembering last
 
     Ok(())
 }
