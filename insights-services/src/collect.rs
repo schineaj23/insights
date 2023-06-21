@@ -100,12 +100,10 @@ impl Collector {
         k: usize,
     ) -> Result<i32, Box<dyn Error>> {
         let mut collected = 0;
-        let mut i = 1;
 
-        for combination in player_ids.into_iter().combinations(k) {
+        for (i, combination) in player_ids.into_iter().combinations(k).enumerate() {
             collected += self.collect_log_ids_for_players(&combination).await?;
             println!("Combination {}: collected {} unique logs", i, collected);
-            i += 1;
 
             std::thread::sleep(time::Duration::from_millis(250));
         }
