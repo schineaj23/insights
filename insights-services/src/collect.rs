@@ -85,9 +85,13 @@ impl Collector {
 
         let mut collected = 0;
         search_result.logs.iter().for_each(|log| {
+            // todo:sixes
+            if log.players < 12 || log.players > 14 {
+                return;
+            }
+
             if log.date >= self.offset {
-                self.log_id_cache.insert(log.id);
-                collected += 1;
+                collected += self.log_id_cache.insert(log.id) as i32;
             }
         });
 
@@ -102,8 +106,9 @@ impl Collector {
         let mut collected = 0;
 
         for (i, combination) in player_ids.into_iter().combinations(k).enumerate() {
-            collected += self.collect_log_ids_for_players(&combination).await?;
-            println!("Combination {}: collected {} unique logs", i, collected);
+            let found = self.collect_log_ids_for_players(&combination).await?;
+            println!("Combination {}: collected {} unique logs", i, found);
+            collected += found;
 
             std::thread::sleep(time::Duration::from_millis(250));
         }
@@ -121,12 +126,13 @@ impl Collector {
 
             let player_ids: Vec<String> = team.players.values().cloned().collect();
 
-            self.collect_permuation_of_players(player_ids, 4).await?;
+            let collected = self.collect_permuation_of_players(player_ids, 4).await?;
 
             println!(
-                "Team {} collection time: {} seconds\n",
+                "Team {} collection time: {} seconds for {} logs\n",
                 team_name,
-                import_instant.elapsed().as_secs_f32()
+                import_instant.elapsed().as_secs_f32(),
+                collected
             );
         }
         Ok(self.log_id_cache.len() as i32)

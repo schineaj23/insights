@@ -1,8 +1,7 @@
-use std::{collections::HashMap, error::Error, fs::File, io::BufReader, sync::Arc};
+use std::{error::Error, sync::Arc};
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use dotenv::dotenv;
-use insights::collect;
 use regex::Regex;
 use sqlx::Postgres;
 
@@ -26,14 +25,9 @@ struct DemoRow {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
-    let path = std::env::var("TEAM_LIST_PATH")?;
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-
-    let _team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
 
     let demo_pool: sqlx::Pool<Postgres> =
-        sqlx::PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
+        sqlx::PgPool::connect(&std::env::var("DEMO_DATABASE_URL")?).await?;
     let log_pool = sqlx::PgPool::connect(&std::env::var("LOG_DATABASE_URL")?).await?;
 
     println!("connected to db");
@@ -80,7 +74,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             continue;
         }
 
-        let map = format!("%{}%", captures.get(1).unwrap().as_str());
+        let map = format!("%{}%", map_unfiltered);
 
         let lower_bound = DateTime::<Utc>::from_utc(
             NaiveDateTime::from_timestamp_opt((log.unix_timestamp as i64) - 100, 0).unwrap(),
@@ -103,11 +97,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 demos.push(demo);
             }
             Err(error) => {
-                println!("Log({}): Error {}", log.log_id, error);
+                println!("Log({}): {:?}", log.log_id, error);
             }
         };
     }
+
     println!("Demos found: {}", demos.len());
+
+    // TODO: create column for demo id and join logs on demo_id
 
     Ok(())
 }
