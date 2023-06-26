@@ -1,5 +1,7 @@
 use cached::proc_macro::cached;
+use chrono::DateTime;
 use chrono::NaiveDateTime;
+use chrono::Utc;
 use dotenv::dotenv;
 use insights::collect;
 use insights::collect::Collector;
@@ -111,7 +113,7 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         [-f --fetch]    Fetch new logs from logs.tf
         [-d --dump]     Dump fetched logs to file
         [-i --insert]   Insert collected logs into database
-        [-o --offset]   Minimum date of log in Unix timestamp 
+        [-o --offset]   Minimum date of log in Unix timestamp, if none supplied use last run
         [-r --read]     Read log ids from file separated by newlines
     ";
     let mut args: Vec<_> = std::env::args_os().collect();
@@ -129,7 +131,27 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         std::process::exit(-1);
     }
 
-    // Mon May 15 2023 03:59:00 GMT+0000 (S12 Team Registration Deadline) = 1684123140
+    let offset_args: Result<String, pico_args::Error> = env_args.value_from_str(["-o", "--offset"]);
+
+    let offset: Option<i32> = match offset_args {
+        Ok(offset_str) => offset_str.parse::<i32>().ok(),
+        Err(e) => match e {
+            pico_args::Error::MissingOption(_) => {
+                match std::fs::read_to_string(format!("{}/last_run", insights::CACHE_PATH)) {
+                    Ok(o) => o.parse::<i32>().ok(),
+                    Err(err) => {
+                        println!("Error reading from last_run: {}", err);
+                        None
+                    }
+                }
+            }
+            err => {
+                println!("Found other error {:?}", err);
+                None
+            }
+        },
+    };
+
     let args = Args {
         fetch_new_logs: env_args.contains(["-f", "--fetch"]),
         dump_log_cache: env_args.contains(["-d", "--dump"]),
@@ -137,9 +159,12 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         team_list_path: env_args
             .value_from_str(["-t", "--team-list"])
             .unwrap_or_else(|_| std::env::var("TEAM_LIST_PATH").expect("TEAM_LIST_PATH not set")),
-        offset: env_args
-            .value_from_fn(["-o", "--offset"], |x| x.parse::<i32>())
-            .unwrap_or(1684123140),
+        offset: offset.unwrap_or_else(|| {
+            println!("Error reading offset, using S12 registration deadline as fallback");
+            // TODO: automate team/seasons
+            // Mon May 15 2023 03:59:00 GMT+0000 (S12 Team Registration Deadline) = 1684123140
+            1684123140
+        }),
         read_logs_path: env_args.opt_value_from_str(["-r", "--read"])?,
     };
 
@@ -148,11 +173,19 @@ fn parse_args() -> Result<Args, pico_args::Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    if !nix::unistd::geteuid().is_root() {
+        eprintln!("Error: Must be root to run importer");
+        std::process::exit(-1);
+    }
+
     dotenv().ok();
 
     let args = parse_args()?;
     let file = File::open(args.team_list_path)?;
     let reader = BufReader::new(file);
+
+    // Create cache directory if it doesn't exist already
+    std::fs::create_dir_all(insights::CACHE_PATH)?;
 
     let team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
@@ -191,6 +224,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let log_collection_time = log_collection_start.elapsed();
+
+    // Save current timestamp as next offset
+    let utc_now: DateTime<Utc> = Utc::now();
+    tokio::fs::write(
+        format!("{}/last_run", insights::CACHE_PATH),
+        utc_now.timestamp().to_string(),
+    )
+    .await?;
 
     let log_insert_start = Instant::now();
 

@@ -107,7 +107,7 @@ impl Collector {
 
         for (i, combination) in player_ids.into_iter().combinations(k).enumerate() {
             let found = self.collect_log_ids_for_players(&combination).await?;
-            println!("Combination {}: collected {} unique logs", i, found);
+            println!("Combination {}: collected {} new logs", i, found);
             collected += found;
 
             std::thread::sleep(time::Duration::from_millis(250));
