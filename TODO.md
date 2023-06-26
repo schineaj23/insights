@@ -31,13 +31,9 @@ Advanced stats that I want to track:
 - player impact rating (impact + kills + ???) similar to hltv
 
 now that I have logs imported:
-connect each log with a demo (if possible) could this be done by the timestamp? timezone appears to be cet
+connect each log with a demo (if possible) -> done with utc timestamp
 write an analyzer (similar to the collector) which will use demo parsing to get the data that I want
 ideally this parser does not run on one thread and dispatches workers to parse and add because the collector is already very slow
-
-getting the associated id from a demo is
-
-``` select id, name, map, created_at, server from demos where (demos.created_at between to_timestamp($id + (4*3600) - 100) and to_timestamp($id + (4*3600) + 100)) and map like '%$map%'```;
 
 Very Long down the road...
 - Real-time score prediction/round prediction based on current gamestate 
