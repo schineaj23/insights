@@ -137,7 +137,7 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         Ok(offset_str) => offset_str.parse::<i32>().ok(),
         Err(e) => match e {
             pico_args::Error::MissingOption(_) => {
-                match std::fs::read_to_string(format!("{}/last_run", insights::CACHE_PATH)) {
+                match std::fs::read_to_string("~/.config/insights/importer/last_run") {
                     Ok(o) => o.parse::<i32>().ok(),
                     Err(err) => {
                         println!("Error reading from last_run: {}", err);
@@ -173,11 +173,6 @@ fn parse_args() -> Result<Args, pico_args::Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    if !nix::unistd::geteuid().is_root() {
-        eprintln!("Error: Must be root to run importer");
-        std::process::exit(-1);
-    }
-
     dotenv().ok();
 
     let args = parse_args()?;
@@ -185,7 +180,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = BufReader::new(file);
 
     // Create cache directory if it doesn't exist already
-    std::fs::create_dir_all(insights::CACHE_PATH)?;
+    std::fs::create_dir_all("~/.config/insights/importer/")?;
 
     let team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
@@ -228,7 +223,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Save current timestamp as next offset
     let utc_now: DateTime<Utc> = Utc::now();
     tokio::fs::write(
-        format!("{}/last_run", insights::CACHE_PATH),
+        "~/.config/insights/importer/last_run",
         utc_now.timestamp().to_string(),
     )
     .await?;
