@@ -1,0 +1,349 @@
+Rounds: MatchState { chat: [ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] RED's medic DROPPED!", tick: 33458
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU had uber for 66 seconds before using it", tick: 37606
+        }, ChatMessage { kind: ChatAll, from: "FROYO donovin", text: "goat pick", tick: 45926
+        }, ChatMessage { kind: ChatAllDead, from: "COZY! mentlegen", text: "lel", tick: 49296
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU spent 6.4 seconds after spawning before healing", tick: 50112
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU lost their uber advantage of 17 seconds", tick: 55852
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU had uber for 62 seconds before using it", tick: 59016
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU lost their uber advantage of 16 seconds", tick: 79279
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] RED lost their uber advantage of 15 seconds", tick: 85612
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] RED had uber for 92 seconds before using it", tick: 90403
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU had uber for 47 seconds before using it", tick: 97966
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] RED had uber for 49 seconds before using it", tick: 97971
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] RED lost their uber advantage of 25 seconds", tick: 104012
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] RED had uber for 61 seconds before using it", tick: 106233
+        }, ChatMessage { kind: ChatAll, from: "", text: "[STV Stats] BLU had uber for 34 seconds before using it", tick: 106288
+        }, ChatMessage { kind: ChatAll, from: "", text: "[RGLQoL] Match ended. Wait 90 seconds to changelevel to avoid cutting off actively broadcasting STV. This can be overridden with a second changelevel command.", tick: 120028
+        }
+    ], users: {UserId(2): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]), name: "b4nnyTV", user_id: UserId(2), steam_id: "BOT", entity_id: EntityId(1), team: Other
+        }, UserId(3): UserInfo { classes: ClassList([
+                0,
+                13,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+            ]), name: "H5", user_id: UserId(3), steam_id: "[U:1:75438474]", entity_id: EntityId(2), team: Blue
+        }, UserId(4): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                26,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+            ]), name: "FROYO donovin", user_id: UserId(4), steam_id: "[U:1:85413659]", entity_id: EntityId(3), team: Blue
+        }, UserId(5): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                21,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+            ]), name: "FROYO b4nny", user_id: UserId(5), steam_id: "[U:1:10403381]", entity_id: EntityId(4), team: Blue
+        }, UserId(7): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                0,
+                16,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]), name: "FROYO logan", user_id: UserId(7), steam_id: "[U:1:122797343]", entity_id: EntityId(6), team: Blue
+        }, UserId(8): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                0,
+                0,
+                13,
+                0,
+                0,
+                0,
+                0
+            ]), name: "zc", user_id: UserId(8), steam_id: "[U:1:83607391]", entity_id: EntityId(5), team: Blue
+        }, UserId(9): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                0,
+                21,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]), name: "Jarrett", user_id: UserId(9), steam_id: "[U:1:54225072]", entity_id: EntityId(7), team: Red
+        }, UserId(10): UserInfo { classes: ClassList([
+                0,
+                21,
+                0,
+                0,
+                0,
+                0,
+                1,
+                2,
+                0,
+                4
+            ]), name: "KJKUOD", user_id: UserId(10), steam_id: "[U:1:76183207]", entity_id: EntityId(8), team: Red
+        }, UserId(11): UserInfo { classes: ClassList([
+                0,
+                0,
+                2,
+                22,
+                0,
+                0,
+                5,
+                0,
+                0,
+                0
+            ]), name: "COZY! mentlegen", user_id: UserId(11), steam_id: "[U:1:14228231]", entity_id: EntityId(9), team: Red
+        }, UserId(12): UserInfo { classes: ClassList([
+                0,
+                27,
+                6,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                1
+            ]), name: "WONDER.", user_id: UserId(12), steam_id: "[U:1:132262126]", entity_id: EntityId(10), team: Red
+        }, UserId(13): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                0,
+                0,
+                19,
+                0,
+                0,
+                0,
+                0
+            ]), name: "SillyDivine :P", user_id: UserId(13), steam_id: "[U:1:903973347]", entity_id: EntityId(11), team: Red
+        }, UserId(14): UserInfo { classes: ClassList([
+                0,
+                18,
+                3,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]), name: "(JayP) JayPlay", user_id: UserId(14), steam_id: "[U:1:89195940]", entity_id: EntityId(12), team: Blue
+        }, UserId(15): UserInfo { classes: ClassList([
+                0,
+                0,
+                0,
+                30,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]), name: "sax", user_id: UserId(15), steam_id: "[U:1:134523124]", entity_id: EntityId(13), team: Red
+        }
+    }, deaths: [Death { weapon: "iron_bomber", victim: UserId(15), assister: None, killer: UserId(7), tick: 22161
+        }, Death { weapon: "quake_rl", victim: UserId(9), assister: Some(UserId(14)), killer: UserId(5), tick: 22352
+        }, Death { weapon: "quake_rl", victim: UserId(13), assister: Some(UserId(4)), killer: UserId(5), tick: 24166
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: None, killer: UserId(10), tick: 24224
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: None, killer: UserId(10), tick: 24268
+        }, Death { weapon: "iron_bomber", victim: UserId(9), assister: Some(UserId(5)), killer: UserId(7), tick: 27396
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(5)), killer: UserId(4), tick: 27576
+        }, Death { weapon: "quake_rl", victim: UserId(11), assister: None, killer: UserId(11), tick: 28426
+        }, Death { weapon: "world", victim: UserId(5), assister: None, killer: UserId(12), tick: 28525
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: Some(UserId(8)), killer: UserId(3), tick: 28568
+        }, Death { weapon: "quake_rl", victim: UserId(13), assister: None, killer: UserId(4), tick: 28840
+        }, Death { weapon: "iron_bomber", victim: UserId(9), assister: Some(UserId(14)), killer: UserId(7), tick: 28881
+        }, Death { weapon: "market_gardener", victim: UserId(10), assister: Some(UserId(3)), killer: UserId(4), tick: 28959
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: None, killer: UserId(11), tick: 31076
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(12), assister: Some(UserId(3)), killer: UserId(7), tick: 31961
+        }, Death { weapon: "quake_rl", victim: UserId(10), assister: Some(UserId(14)), killer: UserId(4), tick: 33156
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: None, killer: UserId(11), tick: 33458
+        }, Death { weapon: "quake_rl", victim: UserId(13), assister: None, killer: UserId(4), tick: 33458
+        }, Death { weapon: "iron_bomber", victim: UserId(15), assister: None, killer: UserId(7), tick: 33525
+        }, Death { weapon: "quake_rl", victim: UserId(14), assister: None, killer: UserId(11), tick: 33828
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: Some(UserId(14)), killer: UserId(3), tick: 33886
+        }, Death { weapon: "iron_bomber", victim: UserId(11), assister: Some(UserId(14)), killer: UserId(7), tick: 37986
+        }, Death { weapon: "quake_rl", victim: UserId(13), assister: None, killer: UserId(4), tick: 38087
+        }, Death { weapon: "iron_bomber", victim: UserId(4), assister: None, killer: UserId(9), tick: 38231
+        }, Death { weapon: "quake_rl", victim: UserId(9), assister: None, killer: UserId(5), tick: 38632
+        }, Death { weapon: "scattergun", victim: UserId(7), assister: Some(UserId(9)), killer: UserId(10), tick: 38752
+        }, Death { weapon: "quake_rl", victim: UserId(10), assister: None, killer: UserId(5), tick: 38765
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: Some(UserId(3)), killer: UserId(14), tick: 38766
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(5), tick: 38879
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(14)), killer: UserId(4), tick: 41447
+        }, Death { weapon: "world", victim: UserId(12), assister: Some(UserId(8)), killer: UserId(3), tick: 41704
+        }, Death { weapon: "world", victim: UserId(4), assister: None, killer: UserId(9), tick: 41983
+        }, Death { weapon: "quake_rl", victim: UserId(11), assister: Some(UserId(3)), killer: UserId(5), tick: 42059
+        }, Death { weapon: "world", victim: UserId(5), assister: None, killer: UserId(10), tick: 43132
+        }, Death { weapon: "scattergun", victim: UserId(10), assister: None, killer: UserId(14), tick: 44035
+        }, Death { weapon: "iron_bomber", victim: UserId(9), assister: Some(UserId(3)), killer: UserId(7), tick: 44201
+        }, Death { weapon: "sniperrifle", victim: UserId(7), assister: None, killer: UserId(11), tick: 44909
+        }, Death { weapon: "scattergun", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(14), tick: 45120
+        }, Death { weapon: "scattergun", victim: UserId(3), assister: None, killer: UserId(12), tick: 45248
+        }, Death { weapon: "quake_rl", victim: UserId(13), assister: Some(UserId(14)), killer: UserId(4), tick: 45259
+        }, Death { weapon: "sniperrifle", victim: UserId(8), assister: None, killer: UserId(11), tick: 45394
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: Some(UserId(4)), killer: UserId(14), tick: 45406
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: None, killer: UserId(14), tick: 45717
+        }, Death { weapon: "iron_bomber", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(7), tick: 47632
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: Some(UserId(5)), killer: UserId(14), tick: 47848
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: Some(UserId(9)), killer: UserId(10), tick: 47987
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(9), assister: Some(UserId(3)), killer: UserId(7), tick: 48133
+        }, Death { weapon: "scattergun", victim: UserId(8), assister: None, killer: UserId(10), tick: 48240
+        }, Death { weapon: "scattergun", victim: UserId(10), assister: None, killer: UserId(3), tick: 48506
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: None, killer: UserId(11), tick: 48903
+        }, Death { weapon: "quake_rl", victim: UserId(11), assister: Some(UserId(4)), killer: UserId(5), tick: 49042
+        }, Death { weapon: "quake_rl", victim: UserId(5), assister: None, killer: UserId(11), tick: 49051
+        }, Death { weapon: "quake_rl", victim: UserId(7), assister: Some(UserId(12)), killer: UserId(15), tick: 49676
+        }, Death { weapon: "sniperrifle", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(14), tick: 51046
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: None, killer: UserId(10), tick: 51194
+        }, Death { weapon: "quake_rl", victim: UserId(14), assister: None, killer: UserId(11), tick: 51679
+        }, Death { weapon: "iron_bomber", victim: UserId(3), assister: None, killer: UserId(9), tick: 51897
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: Some(UserId(12)), killer: UserId(10), tick: 53688
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: None, killer: UserId(14), tick: 57012
+        }, Death { weapon: "quake_rl", victim: UserId(9), assister: Some(UserId(7)), killer: UserId(5), tick: 57095
+        }, Death { weapon: "quake_rl", victim: UserId(7), assister: Some(UserId(11)), killer: UserId(15), tick: 57469
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(8)), killer: UserId(5), tick: 57511
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: Some(UserId(4)), killer: UserId(14), tick: 57753
+        }, Death { weapon: "crusaders_crossbow", victim: UserId(5), assister: Some(UserId(10)), killer: UserId(13), tick: 58514
+        }, Death { weapon: "market_gardener", victim: UserId(10), assister: Some(UserId(3)), killer: UserId(4), tick: 59322
+        }, Death { weapon: "minigun", victim: UserId(4), assister: None, killer: UserId(11), tick: 59544
+        }, Death { weapon: "quake_rl", victim: UserId(3), assister: Some(UserId(12)), killer: UserId(15), tick: 59737
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(12), assister: Some(UserId(8)), killer: UserId(7), tick: 60712
+        }, Death { weapon: "world", victim: UserId(4), assister: Some(UserId(13)), killer: UserId(10), tick: 62617
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(7), tick: 63765
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(4), tick: 65389
+        }, Death { weapon: "scattergun", victim: UserId(10), assister: Some(UserId(7)), killer: UserId(14), tick: 65557
+        }, Death { weapon: "quake_rl", victim: UserId(9), assister: Some(UserId(7)), killer: UserId(4), tick: 66160
+        }, Death { weapon: "minigun", victim: UserId(4), assister: None, killer: UserId(11), tick: 66183
+        }, Death { weapon: "minigun", victim: UserId(5), assister: None, killer: UserId(11), tick: 66323
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: Some(UserId(5)), killer: UserId(3), tick: 66355
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(12), assister: Some(UserId(8)), killer: UserId(7), tick: 66668
+        }, Death { weapon: "scattergun", victim: UserId(13), assister: Some(UserId(3)), killer: UserId(14), tick: 66833
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(7), assister: Some(UserId(12)), killer: UserId(9), tick: 68797
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: Some(UserId(11)), killer: UserId(12), tick: 69112
+        }, Death { weapon: "quake_rl", victim: UserId(13), assister: Some(UserId(4)), killer: UserId(5), tick: 69200
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(5), assister: Some(UserId(10)), killer: UserId(9), tick: 69322
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: Some(UserId(3)), killer: UserId(14), tick: 69408
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: None, killer: UserId(14), tick: 69961
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: Some(UserId(11)), killer: UserId(10), tick: 70002
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(9), assister: Some(UserId(3)), killer: UserId(7), tick: 70849
+        }, Death { weapon: "world", victim: UserId(15), assister: None, killer: UserId(3), tick: 71055
+        }, Death { weapon: "scattergun", victim: UserId(3), assister: Some(UserId(15)), killer: UserId(10), tick: 71145
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(10), assister: Some(UserId(8)), killer: UserId(7), tick: 71210
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: Some(UserId(12)), killer: UserId(15), tick: 73312
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(11), assister: Some(UserId(14)), killer: UserId(7), tick: 73710
+        }, Death { weapon: "scattergun", victim: UserId(7), assister: Some(UserId(10)), killer: UserId(12), tick: 74025
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(14)), killer: UserId(5), tick: 74066
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: Some(UserId(13)), killer: UserId(12), tick: 74998
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: Some(UserId(9)), killer: UserId(10), tick: 75145
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: None, killer: UserId(3), tick: 75401
+        }, Death { weapon: "iron_curtain", victim: UserId(3), assister: Some(UserId(9)), killer: UserId(11), tick: 75461
+        }, Death { weapon: "quake_rl", victim: UserId(7), assister: Some(UserId(9)), killer: UserId(15), tick: 77354
+        }, Death { weapon: "scattergun", victim: UserId(15), assister: Some(UserId(5)), killer: UserId(3), tick: 77520
+        }, Death { weapon: "quake_rl", victim: UserId(10), assister: Some(UserId(3)), killer: UserId(5), tick: 77858
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: Some(UserId(13)), killer: UserId(11), tick: 78238
+        }, Death { weapon: "scattergun", victim: UserId(9), assister: Some(UserId(5)), killer: UserId(3), tick: 78437
+        }, Death { weapon: "quake_rl", victim: UserId(8), assister: Some(UserId(12)), killer: UserId(15), tick: 79916
+        }, Death { weapon: "pistol_scout", victim: UserId(5), assister: None, killer: UserId(10), tick: 81199
+        }, Death { weapon: "quake_rl", victim: UserId(14), assister: None, killer: UserId(11), tick: 81379
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: Some(UserId(9)), killer: UserId(10), tick: 82982
+        }, Death { weapon: "quake_rl", victim: UserId(10), assister: Some(UserId(5)), killer: UserId(4), tick: 83167
+        }, Death { weapon: "scattergun", victim: UserId(15), assister: None, killer: UserId(3), tick: 83589
+        }, Death { weapon: "market_gardener", victim: UserId(9), assister: Some(UserId(3)), killer: UserId(4), tick: 83822
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: Some(UserId(12)), killer: UserId(11), tick: 83895
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: Some(UserId(10)), killer: UserId(12), tick: 85488
+        }, Death { weapon: "pistol_scout", victim: UserId(3), assister: Some(UserId(12)), killer: UserId(10), tick: 85932
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: None, killer: UserId(11), tick: 86020
+        }, Death { weapon: "quake_rl", victim: UserId(11), assister: None, killer: UserId(4), tick: 86024
+        }, Death { weapon: "pistol_scout", victim: UserId(5), assister: None, killer: UserId(10), tick: 86273
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: Some(UserId(12)), killer: UserId(10), tick: 88719
+        }, Death { weapon: "knife", victim: UserId(9), assister: Some(UserId(7)), killer: UserId(4), tick: 88812
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: Some(UserId(10)), killer: UserId(12), tick: 88917
+        }, Death { weapon: "scattergun", victim: UserId(7), assister: Some(UserId(13)), killer: UserId(10), tick: 90520
+        }, Death { weapon: "scattergun", victim: UserId(3), assister: Some(UserId(15)), killer: UserId(10), tick: 90609
+        }, Death { weapon: "pistol_scout", victim: UserId(14), assister: None, killer: UserId(10), tick: 90714
+        }, Death { weapon: "quake_rl", victim: UserId(8), assister: None, killer: UserId(15), tick: 90752
+        }, Death { weapon: "pistol_scout", victim: UserId(5), assister: None, killer: UserId(10), tick: 90894
+        }, Death { weapon: "scattergun", victim: UserId(15), assister: None, killer: UserId(14), tick: 92967
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: Some(UserId(11)), killer: UserId(10), tick: 93345
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: None, killer: UserId(12), tick: 93504
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: Some(UserId(12)), killer: UserId(10), tick: 93725
+        }, Death { weapon: "pistol_scout", victim: UserId(7), assister: Some(UserId(9)), killer: UserId(10), tick: 95946
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: Some(UserId(10)), killer: UserId(12), tick: 96667
+        }, Death { weapon: "world", victim: UserId(4), assister: None, killer: UserId(10), tick: 96676
+        }, Death { weapon: "quake_rl", victim: UserId(14), assister: Some(UserId(10)), killer: UserId(15), tick: 98266
+        }, Death { weapon: "quake_rl", victim: UserId(8), assister: None, killer: UserId(11), tick: 99342
+        }, Death { weapon: "scattergun", victim: UserId(5), assister: Some(UserId(11)), killer: UserId(10), tick: 99432
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(12), assister: Some(UserId(5)), killer: UserId(7), tick: 99455
+        }, Death { weapon: "quake_rl", victim: UserId(11), assister: None, killer: UserId(4), tick: 99514
+        }, Death { weapon: "scattergun", victim: UserId(10), assister: Some(UserId(5)), killer: UserId(3), tick: 99550
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(9), assister: None, killer: UserId(7), tick: 99674
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: Some(UserId(13)), killer: UserId(10), tick: 102965
+        }, Death { weapon: "scattergun", victim: UserId(9), assister: Some(UserId(4)), killer: UserId(14), tick: 103014
+        }, Death { weapon: "quake_rl", victim: UserId(3), assister: None, killer: UserId(15), tick: 103340
+        }, Death { weapon: "quake_rl", victim: UserId(14), assister: None, killer: UserId(15), tick: 103809
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(8)), killer: UserId(5), tick: 104669
+        }, Death { weapon: "scattergun", victim: UserId(12), assister: Some(UserId(8)), killer: UserId(3), tick: 104770
+        }, Death { weapon: "scattergun", victim: UserId(4), assister: None, killer: UserId(10), tick: 105804
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: Some(UserId(5)), killer: UserId(14), tick: 105954
+        }, Death { weapon: "scattergun", victim: UserId(9), assister: Some(UserId(7)), killer: UserId(14), tick: 107092
+        }, Death { weapon: "scattergun", victim: UserId(10), assister: Some(UserId(3)), killer: UserId(14), tick: 107306
+        }, Death { weapon: "quake_rl", victim: UserId(8), assister: Some(UserId(12)), killer: UserId(15), tick: 107351
+        }, Death { weapon: "scattergun", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(14), tick: 107449
+        }, Death { weapon: "quake_rl", victim: UserId(12), assister: Some(UserId(3)), killer: UserId(4), tick: 107629
+        }, Death { weapon: "quake_rl", victim: UserId(5), assister: Some(UserId(13)), killer: UserId(15), tick: 114579
+        }, Death { weapon: "quake_rl", victim: UserId(12), assister: None, killer: UserId(4), tick: 115792
+        }, Death { weapon: "world", victim: UserId(10), assister: None, killer: UserId(4), tick: 115804
+        }, Death { weapon: "quake_rl", victim: UserId(4), assister: Some(UserId(10)), killer: UserId(15), tick: 115867
+        }, Death { weapon: "tf_projectile_pipe_remote", victim: UserId(11), assister: Some(UserId(3)), killer: UserId(7), tick: 116396
+        }, Death { weapon: "scattergun", victim: UserId(9), assister: Some(UserId(3)), killer: UserId(14), tick: 116990
+        }, Death { weapon: "quake_rl", victim: UserId(15), assister: Some(UserId(3)), killer: UserId(5), tick: 116996
+        }, Death { weapon: "scattergun", victim: UserId(13), assister: Some(UserId(14)), killer: UserId(3), tick: 117089
+        }, Death { weapon: "scattergun", victim: UserId(15), assister: Some(UserId(4)), killer: UserId(3), tick: 118802
+        }, Death { weapon: "scattergun", victim: UserId(14), assister: None, killer: UserId(10), tick: 118861
+        }, Death { weapon: "scattergun", victim: UserId(9), assister: None, killer: UserId(3), tick: 118941
+        }, Death { weapon: "quake_rl", victim: UserId(10), assister: Some(UserId(8)), killer: UserId(4), tick: 119096
+        }, Death { weapon: "quake_rl", victim: UserId(12), assister: Some(UserId(3)), killer: UserId(5), tick: 119317
+        }, Death { weapon: "scattergun", victim: UserId(11), assister: None, killer: UserId(3), tick: 119388
+        }, Death { weapon: "scattergun", victim: UserId(13), assister: None, killer: UserId(3), tick: 119483
+        }
+    ], rounds: [Round { winner: Blue, length: 94.905, end_tick: 28771
+        }, Round { winner: Blue, length: 140.18997, end_tick: 38784
+        }, Round { winner: Blue, length: 91.244995, end_tick: 45534
+        }, Round { winner: Blue, length: 309.04498, end_tick: 66804
+        }, Round { winner: Red, length: 343.96497, end_tick: 90402
+        }, Round { winner: Blue, length: 424.38, end_tick: 119361
+        }
+    ], start_tick: 22117, interval_per_tick: 0.015
+}
