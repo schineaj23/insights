@@ -55,7 +55,7 @@ impl Collector {
     pub async fn import_from_file(&mut self, path: &str) -> Result<i32, Box<dyn Error>> {
         let collected = tokio::fs::read_to_string(path)
             .await?
-            .split("\n")
+            .split(",")
             .into_iter()
             .map(|x| self.log_id_cache.insert(x.parse::<i32>().unwrap()))
             .count();
@@ -64,7 +64,7 @@ impl Collector {
     }
 
     pub async fn dump_cache_to_file(&self, path: &str) -> tokio::io::Result<()> {
-        tokio::fs::write(path, self.log_id_cache.iter().join("\n")).await
+        tokio::fs::write(path, self.log_id_cache.iter().join(",")).await
     }
 
     pub fn get_logs(&self) -> &HashSet<i32> {
