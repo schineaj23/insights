@@ -6,4 +6,4 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tf-demo-parser = "0.4.0"
+tf-demo-parser = { git = "https://github.com/demostf/parser.git" }
