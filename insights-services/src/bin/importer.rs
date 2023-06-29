@@ -106,6 +106,14 @@ struct Args {
     offset: i32,
 }
 
+fn get_insights_dir() -> String {
+    let path: String = match home::home_dir() {
+        Some(dir) => dir.to_str().unwrap().to_owned(),
+        None => "/".to_owned(),
+    };
+    path + "/.insights"
+}
+
 fn parse_args() -> Result<Args, pico_args::Error> {
     let help: &str =
         "USAGE: importer -t | --team-list FILE [-fdi] [-o | --offset NUMBER] [-r | --read FILE]
@@ -137,7 +145,7 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         Ok(offset_str) => offset_str.parse::<i32>().ok(),
         Err(e) => match e {
             pico_args::Error::MissingOption(_) => {
-                match std::fs::read_to_string("~/.config/insights/importer/last_run") {
+                match std::fs::read_to_string(get_insights_dir() + "/last_run") {
                     Ok(o) => o.parse::<i32>().ok(),
                     Err(err) => {
                         println!("Error reading from last_run: {}", err);
@@ -180,7 +188,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = BufReader::new(file);
 
     // Create cache directory if it doesn't exist already
-    std::fs::create_dir_all("~/.config/insights/importer/")?;
+    std::fs::create_dir_all(get_insights_dir())?;
 
     let team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
@@ -215,7 +223,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let logs_cache = collector.get_logs();
 
     if args.dump_log_cache {
-        collector.dump_cache_to_file("dumped-logs.txt").await?;
+        collector.dump_cache_to_file("dumped_logs.csv").await?;
     }
 
     let log_collection_time = log_collection_start.elapsed();
@@ -223,7 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Save current timestamp as next offset
     let utc_now: DateTime<Utc> = Utc::now();
     tokio::fs::write(
-        "~/.config/insights/importer/last_run",
+        get_insights_dir() + "/last_run",
         utc_now.timestamp().to_string(),
     )
     .await?;
