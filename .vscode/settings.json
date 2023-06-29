@@ -20,8 +20,5 @@
         "ubers"
     ],
     "cSpell.enabled": false,
-    "editor.formatOnSave": true,
-    "rust-analyzer.linkedProjects": [
-        "./insights-services/analyzer/Cargo.toml"
-    ],
+    "editor.formatOnSave": true
 }
