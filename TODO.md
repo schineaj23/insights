@@ -26,8 +26,37 @@ Win percentage across maps, adjusted for each opponent
 Advanced stats that I want to track:
 
 - Sac efficiency (times that sac killed/forced medic, or killed demoman per attempts)
-  This has to be only when people
+  Comments from the file taken out of here.
+```
+// Bomb efficiency
+// Starts on RocketJumpLanded.
+// If kill/opposing medic force/ then successful within threshold
+// If die without any of these conditions (within threshold), unsucessful.
+
+// things to consider: jumps that were just for reposition/spamming
+// how do i make sure that they have jumped enough into the teams?
+
+// Jump in
+// Deal damage
+// (potentially force/get kill/etc)
+// die (or live?)
+```
+
 - Stalemate breaks
+  Other schizo ramblings
+
+```
+// What I am trying to do right now: Sac Efficiency Calculator
+// What is a sac? When soldier bombs into the other team (usually for the medic or demo)
+// When does this happen? On even uber situations/stalemates (x amount of time since last cap, most players are alive)
+// , Disadvantaged situations
+
+// Ways to identify stalemates:
+// I guess first identify stalemates so write the analyzer
+// Base case: soldier dies when all other 11 players are alive on similar uber scenarios
+
+```
+
 - Team fight (dry fights/mids) %
 - Uber fight %
 - Defensive power rating(parking the bus)/offensive power rating
