@@ -1,5 +1,7 @@
 use std::{collections::HashMap, fs, time::Instant};
 
+use log::debug;
+use pico_args::Arguments;
 use tf_demo_parser::{
     demo::{
         data::{DemoTick, UserInfo},
@@ -18,32 +20,26 @@ use tf_demo_parser::{
     },
     Demo, DemoParser, MessageType, ParserState,
 };
-
-// What I am trying to do right now: Sac Efficiency Calculator
-// What is a sac? When soldier bombs into the other team (usually for the medic or demo)
-// When does this happen? On even uber situations/stalemates (x amount of time since last cap, most players are alive)
-// , Disadvantaged situations
-
-// Ways to identify stalemates:
-// I guess first identify stalemates so write the analyzer
-// Base case: soldier dies when all other 11 players are alive on similar uber scenarios
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let file = fs::read("bagel_froyo.dem")?;
+    let mut args = Arguments::from_env();
+    let demo = args
+        .value_from_str(["--demo", "-d"])
+        .unwrap_or(String::from("process_froyo.dem"));
+
+    let file = fs::read(demo)?;
     let demo = Demo::new(&file);
     // let parser = DemoParser::new(demo.get_stream());
 
     let start = Instant::now();
 
-    let analyzer = InsightsAnalyzer::new();
-    let parser = DemoParser::new_with_analyser(demo.get_stream(), analyzer);
+    let parser = DemoParser::new_with_analyser(demo.get_stream(), InsightsAnalyzer::new());
     let (_header, bomb_attempts) = parser.parse()?;
 
     let t = start.elapsed().as_secs_f32();
 
-    println!("All attempts");
+    debug!("All attempts");
     bomb_attempts.iter().for_each(|x| {
-        println!("{:?}", x);
+        debug!("{:?}", x);
     });
 
     let bomb_dmg: Vec<&BombAttempt> = bomb_attempts
@@ -67,11 +63,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (uid, (cnt, cnt_dmg, dmg)) in dmg {
         println!(
-            "Uid: {}, NumBombs: {}, Dmg/Bomb: {}, NonzeroDmgBombs: {}",
+            "Uid: {}, NumBombs: {}, Dmg/Bomb: {:.2}, NonzeroDmgBombs: {} BombEff: {:.2}%",
             uid,
             cnt,
             dmg as f64 / cnt as f64,
-            cnt_dmg
+            cnt_dmg,
+            100f32 * cnt_dmg as f32 / cnt as f32
         );
     }
 
@@ -87,28 +84,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-#[allow(dead_code)]
-#[derive(Debug)]
-struct Stalemate {
-    length: u32,
-    start_tick: DemoTick,
-    end_tick: DemoTick,
-    end_event: GameEvent,
-}
-
-// Bomb efficiency
-// Starts on RocketJumpLanded.
-// If kill/opposing medic force/ then successful within threshold
-// If die without any of these conditions (within threshold), unsucessful.
-
-// things to consider: jumps that were just for reposition/spamming
-// how do i make sure that they have jumped enough into the teams?
-
-// Jump in
-// Deal damage
-// (potentially force/get kill/etc)
-// die (or live?)
 
 #[allow(dead_code)]
 #[derive(Default, Debug)]
@@ -186,23 +161,19 @@ impl MessageHandler for InsightsAnalyzer {
             Message::GameEvent(message) => self.handle_game_event(&message.event, tick),
             Message::NetTick(_) => {
                 self.jumpers.retain(|_, attempt| {
-                    // let p = self.player_data.get(&attempt.user.into()).unwrap();
                     let cond = match attempt.land_tick {
-                        Some(land_tick) => u32::from(tick) - u32::from(land_tick) < 66 * 3,
+                        Some(land_tick) => u32::from(tick) - u32::from(land_tick) < 66 * 2,
                         None => true,
                     };
 
                     if !cond {
                         attempt.state = BombState::TimedOut;
-                        println!("Timing out {:?}", attempt);
+                        debug!("Timing out {:?}", attempt);
                         self.jumps.push(attempt.clone());
                     }
 
                     cond
                 });
-            }
-            Message::ClassInfo(e) => {
-                println!("{:?}", e)
             }
             _ => {}
         }
@@ -267,15 +238,15 @@ impl InsightsAnalyzer {
                     self.round_state.has_match_started = true;
                 }
                 self.round_state.is_dead_time = false;
-                println!("Tick: {:?}, Start: {:?}", tick, e);
+                debug!("Tick: {:?}, Start: {:?}", tick, e);
             }
             GameEvent::TeamPlayRoundWin(_) => self.round_state.is_dead_time = true,
             GameEvent::TeamPlayRoundStalemate(_) => self.round_state.is_dead_time = true,
             GameEvent::TeamPlayPointCaptured(e) => {
-                println!("Tick: {:?}, Capture: {:?}", tick, e);
+                debug!("Tick: {:?}, Capture: {:?}", tick, e);
             }
             GameEvent::PlayerChargeDeployed(e) => {
-                println!("Tick: {:?}, Charge: {:?}", tick, e);
+                debug!("Tick: {:?}, Charge: {:?}", tick, e);
             }
             GameEvent::RocketJumpLanded(e) => {
                 if !self.should_record() {
@@ -284,9 +255,9 @@ impl InsightsAnalyzer {
 
                 // FIXME: remove this if it is bad
                 if self.jumpers.contains_key(&e.user_id) {
-                    print!("Tick: {:?} ", tick);
+                    debug!("Tick: {:?} ", tick);
                     if !self.in_range(e.user_id) {
-                        println!(
+                        debug!(
                             "Removing ({}) {} because not in range.",
                             e.user_id,
                             self.users.get(&e.user_id.into()).unwrap().name
@@ -330,16 +301,13 @@ impl InsightsAnalyzer {
                 if self.jumpers.contains_key(&e.user_id) {
                     let mut attempt = self.jumpers.remove(&e.user_id).unwrap();
                     attempt.state = BombState::Died;
-                    println!("Saving {:?}", attempt);
+                    debug!("Saving {:?}", attempt);
                     self.jumps.push(attempt);
                     return;
                 }
             }
             GameEvent::PlayerHurt(e) => {
-                if !self.jumpers.contains_key(&e.attacker)
-                    || !self.jumpers.contains_key(&e.user_id)
-                    || !self.should_record()
-                {
+                if !self.should_record() {
                     return;
                 }
 
@@ -350,7 +318,6 @@ impl InsightsAnalyzer {
                 });
 
                 self.jumpers.entry(e.user_id).and_modify(|x| {
-                    if e.attacker != e.user_id {}
                     // TODO: FIXME: NOTE: this is including the damage taken from the blast itself
                     x.damage_taken += e.damage_amount;
                 });
@@ -414,21 +381,20 @@ impl InsightsAnalyzer {
     }
 
     // TODO: possibly separate waddling skips vs high bombs, since small skip/spam gets detected if < 750, but fades dont?
-
     // Gets the distance to the closest player by iterating over every enemy and taking pythagorean distance
     fn in_range(&self, id: u16) -> bool {
         let player: &Player = self.player_data.get(&id.into()).unwrap();
         let pos = player.position;
         let mut min = f32::MAX;
         self.player_data.iter().for_each(|(_, p)| {
-            if player.team == p.team || p.team == Team::Other || p.team == Team::Spectator {
+            if player.team == p.team {
                 return;
             }
             let dist =
                 f32::sqrt(f32::powi(p.position.x - pos.x, 2) + f32::powi(p.position.y - pos.y, 2));
             min = f32::min(min, dist);
         });
-        println!(
+        debug!(
             "Closest player to {} is {} far away",
             self.users.get(&id.into()).unwrap().name,
             min
