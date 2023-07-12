@@ -28,7 +28,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let file = fs::read(demo)?;
     let demo = Demo::new(&file);
-    // let parser = DemoParser::new(demo.get_stream());
 
     let start = Instant::now();
 
