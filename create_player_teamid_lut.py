@@ -7,6 +7,9 @@ import time
 teams = {11489, 11304, 11319, 11413, 11389, 11293, 11460, 11490}
 team_players = {}
 
+# assuming that I already manually pruned all of these players
+players_pruned = open("players.json", "r")
+
 with open("player_teamid_lut.json", "w", encoding="utf-8") as f:
     for team in teams:
         print(f"Querying team {team}")
@@ -15,7 +18,8 @@ with open("player_teamid_lut.json", "w", encoding="utf-8") as f:
         print(r)
 
         for player in j["players"]:
-            team_players[player["steamId"]] = j["teamId"]
+            if player["leftAt"] == None:
+                team_players[player["steamId"]] = j["teamId"]
 
         print(f"Added team {j['name']} to list")
         time.sleep(0.2)

@@ -16,7 +16,8 @@ with open("players.json", "w", encoding="utf-8") as f:
 
         n = {}
         for player in j["players"]:
-            n[player["name"]] = player["steamId"]
+            if player["leftAt"] == None:
+                n[player["name"]] = player["steamId"]
         team_players[j["name"]] = n
 
         print(f"Added team {j['name']} to list")
