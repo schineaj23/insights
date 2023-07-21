@@ -17,6 +17,15 @@ path = "src/bin/importer.rs"
 name = "stats"
 path = "src/bin/stats.rs"
 
+[[bin]]
+name = "analyzer"
+path = "src/analyzer/main.rs"
+
+[[bin]]
+name = "process"
+path = "src/analyzer/process.rs"
+
+
 [dependencies]
 reqwest = { version = "0.11.18", features = ["json"] }
 tokio = { version = "1.28.2", features = ["full"] }
@@ -31,8 +40,7 @@ dotenv = "0.15.0"
 pico-args = "0.5.0"
 nix = "0.26.2"
 home = "0.5.5"
-
-[workspace]
-members = [
-    "./analyzer"
-]
+tf-demo-parser = { git = "https://github.com/demostf/parser.git" }
+log = "0.4.19"
+tokio-stream = "0.1.14"
+futures = "0.3.28"

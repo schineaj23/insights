@@ -1,5 +1,7 @@
 use std::error::Error;
 
+use sqlx::FromRow;
+
 use crate::log::{LogSerialized, PlayerStats};
 
 // TODO: create error enums
@@ -87,4 +89,24 @@ pub async fn insert_player_stats(
         .await?;
 
     Ok(())
+}
+
+#[derive(FromRow, Clone)]
+pub struct ConnectedDemo {
+    pub name: Option<String>,
+    pub url: Option<String>,
+    pub log_id: i32,
+    pub id: Option<i32>,
+    pub map: String,
+}
+
+pub async fn get_connected_demos(
+    pool: &sqlx::PgPool,
+) -> Result<Vec<ConnectedDemo>, Box<dyn std::error::Error>> {
+    let demos = sqlx::query_as::<sqlx::Postgres, ConnectedDemo>(
+        "select name, url, log_id, id, map from connected_demos",
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(demos)
 }

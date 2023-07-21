@@ -16,6 +16,7 @@ struct LogRow {
 #[allow(dead_code)]
 #[derive(Debug, sqlx::FromRow)]
 struct DemoRow {
+    id: i32,
     name: String,
     url: String,
     map: String,
@@ -86,7 +87,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Utc,
         );
 
-        let query = sqlx::query_as::<Postgres, DemoRow>("select name, url, map, created_at from demos where demos.created_at between $1 and $2 and demos.map like $3")
+        let query = sqlx::query_as::<Postgres, DemoRow>("select id, name, url, map, created_at from demos where demos.created_at between $1 and $2 and demos.map like $3")
         .bind(&lower_bound)
         .bind(&upper_bound)
         .bind(&map)

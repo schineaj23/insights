@@ -99,3 +99,13 @@ from demos
     )
 where log.map is not null
 order by(log.log_id);
+CREATE TABLE IF NOT EXISTS bomb_attempt(
+    id SERIAL PRIMARY KEY,
+    player_id BIGINT NOT NULL REFERENCES player (steamid64),
+    log_id INTEGER NOT NULL REFERENCES log (log_id),
+    damage INTEGER NOT NULL,
+    damage_taken INTEGER NOT NULL,
+    start_tick INTEGER NOT NULL,
+    end_tick INTEGER NOT NULL,
+    died BOOLEAN
+);
