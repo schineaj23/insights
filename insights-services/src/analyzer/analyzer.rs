@@ -185,7 +185,6 @@ impl BombAttemptAnalyzer {
                     return;
                 }
 
-                // FIXME: remove this if it is bad
                 if self.jumpers.contains_key(&e.user_id) {
                     debug!("Tick: {:?} ", tick);
                     if !self.in_range(e.user_id) {
