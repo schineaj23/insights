@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model bomb_attempt {
+  id           Int      @id @default(autoincrement())
+  player_id    BigInt
+  log_id       Int
+  damage       Int
+  damage_taken Int
+  start_tick   Int
+  end_tick     Int?
+  died         Boolean?
+  log          log      @relation(fields: [log_id], references: [log_id], onDelete: NoAction, onUpdate: NoAction)
+  player       player   @relation(fields: [player_id], references: [steamid64], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model log {
+  log_id         Int            @id
+  unix_timestamp Int
+  map            String         @db.VarChar(50)
+  red_team_id    Int
+  blu_team_id    Int
+  red_team_score Int
+  blu_team_score Int
+  bomb_attempt   bomb_attempt[]
+  player_stats   player_stats[]
+  team_stats     team_stats[]
+}
+
+model player {
+  id           Int            @id @default(autoincrement())
+  steamid64    BigInt         @unique
+  team_id      Int?
+  bomb_attempt bomb_attempt[]
+  player_stats player_stats[]
+}
+
+model player_stats {
+  id               Int    @id @default(autoincrement())
+  log_id           Int
+  player_steamid64 BigInt
+  kills            Int?
+  deaths           Int?
+  dmg              Int?
+  dmg_real         Int?
+  dt               Int?
+  dt_real          Int?
+  hr               Int?
+  ubers            Int?
+  drops            Int?
+  headshots        Int?
+  headshots_hit    Int?
+  log              log    @relation(fields: [log_id], references: [log_id], onDelete: NoAction, onUpdate: NoAction)
+  player           player @relation(fields: [player_steamid64], references: [steamid64], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model team {
+  team_id   Int    @id
+  team_name String @unique @db.VarChar(50)
+}
+
+model team_stats {
+  id         Int  @id @default(autoincrement())
+  log_id     Int
+  team_id    Int
+  score      Int?
+  kills      Int?
+  deaths     Int?
+  dmg        Int?
+  charges    Int?
+  drops      Int?
+  first_caps Int?
+  caps       Int?
+  log        log  @relation(fields: [log_id], references: [log_id], onDelete: NoAction, onUpdate: NoAction)
+}
