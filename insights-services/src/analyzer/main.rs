@@ -1,11 +1,8 @@
-mod analyzer;
-
+use insights::analyzer::analyzer::{BombAttempt, BombAttemptAnalyzer};
 use log::debug;
 use pico_args::Arguments;
 use std::{collections::HashMap, fs, time::Instant};
 use tf_demo_parser::{Demo, DemoParser};
-
-use crate::analyzer::{BombAttempt, BombAttemptAnalyzer};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = Arguments::from_env();

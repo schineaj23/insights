@@ -1,5 +1,3 @@
-mod analyzer;
-
 use futures::StreamExt;
 use insights::db::{self, ConnectedDemo};
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, Pool, Postgres};
@@ -9,7 +7,7 @@ use tf_demo_parser::{
     DemoParser, Stream,
 };
 
-use crate::analyzer::{AnalyzerResult, BombAttempt, BombAttemptAnalyzer, BombState};
+use insights::analyzer::analyzer::{AnalyzerResult, BombAttempt, BombAttemptAnalyzer, BombState};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
