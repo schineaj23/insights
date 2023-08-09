@@ -23,7 +23,7 @@ export const load = (async ({ params }) => {
 
 	return {
 		labels: playerIds,
-		x: averageDamageByPlayer,
-		y: attemptsByPlayer
+		y: averageDamageByPlayer,
+		x: attemptsByPlayer
 	};
 }) satisfies PageServerLoad;

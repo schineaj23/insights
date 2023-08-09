@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Plot, { type Data, type PlotHoverEvent } from 'svelte-plotly.js';
 	import type { PageServerData } from './$types';
-
 	export let data: PageServerData;
+	let inputId: string;
 
 	const plotData: Data[] = [
 		{
@@ -18,6 +18,35 @@
 			hovertext: data.labels
 		}
 	];
+
+	interface Player {
+		name: string;
+		steamid: number;
+		attempts: number;
+		damage_per_attempt: number;
+	}
+
+	interface RequestResponse {
+		players: Player[];
+	}
+
+	async function handleSubmit() {
+		if (inputId === null) {
+			return;
+		}
+
+		if (/[a-zA-Z]/i.test(inputId)) {
+			throw 'Only numbers allowed in input';
+		}
+
+		const req: RequestResponse = await (await fetch(`/api/bomb/${inputId}`)).json();
+		req.players.map((p: Player) => {
+			data.x.push(p.damage_per_attempt);
+			data.y.push(p.attempts);
+			data.labels.push(p.name);
+			console.log(`Added player {${p.name}, ${p.steamid}, ${p.attempts}, ${p.damage_per_attempt}}`);
+		});
+	}
 </script>
 
 <div class="container max-w-xl my-10 p-10 shadow-md">
@@ -33,9 +62,9 @@
 			<Plot
 				data={plotData}
 				layout={{
-					title: 'Average Bomb Damage vs Number of Attempts',
-					xaxis: { title: 'Average Bomb Damage' },
-					yaxis: { title: 'Number of Attempts' },
+					title: 'Mean Bomb Damage vs Number of Attempts',
+					xaxis: { title: 'Number of Attempts' },
+					yaxis: { title: 'Mean Bomb Damage' },
 					font: {
 						family:
 							'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
@@ -56,13 +85,14 @@
 			/>
 		</div>
 
-		<div class="flex flex-row gap-2">
+		<form class="flex flex-row gap-2" on:submit|preventDefault={handleSubmit}>
 			<input
 				type="text"
-				placeholder=" demos.tf id"
+				placeholder="demos.tf id"
 				class="rounded-md transition hover:shadow-md hover:ring hover:ring-sky-200"
+				bind:value={inputId}
 			/>
-			<div
+			<button
 				class="
 				flex
 				items-center
@@ -85,7 +115,8 @@
 				"
 			>
 				<p class="font-bold text-sky-50">Analyze!</p>
-			</div>
-		</div>
+			</button>
+		</form>
+		<p>helo</p>
 	</div>
 </div>
