@@ -1,15 +1,17 @@
-<script lang="ts">
-	import Plot, { type Data, type PlotHoverEvent } from 'svelte-plotly.js';
+<script script lang="ts">
+	import Plot, { type Data, type Layout, type PlotlyHTMLElement } from 'svelte-plotly.js';
 	import type { PageServerData } from './$types';
 	export let data: PageServerData;
 	let inputId: string;
+	let plot: PlotlyHTMLElement;
 
-	const plotData: Data[] = [
+	let plotData: Data[] = [
 		{
 			x: data.x,
 			y: data.y,
 			type: 'scatter',
 			mode: 'markers',
+			name: 'S12 Invite',
 			marker: {
 				color: data.y,
 				colorscale: 'Portland'
@@ -18,6 +20,30 @@
 			hovertext: data.labels
 		}
 	];
+
+	let plotLayout: Partial<Layout> = {
+		title: 'Mean Bomb Damage vs Number of Attempts',
+		xaxis: { title: 'Number of Attempts' },
+		yaxis: { title: 'Mean Bomb Damage' },
+		font: {
+			family:
+				'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
+		},
+		autosize: true,
+		showlegend: false,
+		paper_bgcolor: 'transparent',
+		plot_bgcolor: 'transparent',
+		modebar: {
+			activecolor: '#082f49',
+			color: '#082f49',
+			bgcolor: 'transparent',
+			orientation: 'v',
+			remove: 'lasso2d'
+		},
+		legend: {
+			orientation: 'h'
+		}
+	};
 
 	interface Player {
 		name: string;
@@ -40,18 +66,46 @@
 		}
 
 		const req: RequestResponse = await (await fetch(`/api/bomb/${inputId}`)).json();
-		req.players.map((p: Player) => {
-			data.x.push(p.damage_per_attempt);
-			data.y.push(p.attempts);
-			data.labels.push(p.name);
-			console.log(`Added player {${p.name}, ${p.steamid}, ${p.attempts}, ${p.damage_per_attempt}}`);
+
+		let dpa_x: number[] = [];
+		let attempt_y: number[] = [];
+		let player_labels: string[] = [];
+
+		const userTrace: Data = {
+			x: dpa_x,
+			y: attempt_y,
+			type: 'scatter',
+			mode: 'markers',
+			name: 'Your Demo',
+			marker: {
+				symbol: 'star-dot',
+				size: 14
+			},
+			hoverinfo: 'x+y+text',
+			hovertext: player_labels
+		};
+
+		req.players.forEach((p: Player) => {
+			dpa_x.push(p.damage_per_attempt);
+			attempt_y.push(p.damage_per_attempt);
+			player_labels.push(p.name);
 		});
+
+		if (plotData.length > 1) {
+			plotData[1] = userTrace;
+		} else {
+			plotData.push(userTrace);
+		}
+
+		// FIXME: Evil hack to force-update the plot
+		const Plotly = (await import('plotly.js-dist')).default;
+		Plotly.react(plot, plotData, { ...plotLayout, showlegend: true }, [1]);
 	}
 </script>
 
 <div class="container max-w-xl my-10 p-10 shadow-md">
 	<div class="flex flex-col justify-center gap-4">
-		<p class="text-5xl font-bold subpixel-antialiased">Tracking Bomb Efficiency</p>
+		<p class="text-5xl font-bold subpixel-antialiased">Tracking Jump Efficiency</p>
 		<p class="">
 			Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores ipsa dolorem voluptatem
 			dignissimos eaque. Sunt sapiente facilis tempore, debitis doloremque quisquam aut voluptatem
@@ -61,31 +115,15 @@
 		<div class="max-w-lg rounded-xl shadow-md border">
 			<Plot
 				data={plotData}
-				layout={{
-					title: 'Mean Bomb Damage vs Number of Attempts',
-					xaxis: { title: 'Number of Attempts' },
-					yaxis: { title: 'Mean Bomb Damage' },
-					font: {
-						family:
-							'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
-					},
-					autosize: true,
-					showlegend: false,
-					paper_bgcolor: 'transparent',
-					plot_bgcolor: 'transparent',
-					modebar: {
-						activecolor: '#082f49',
-						color: '#082f49',
-						bgcolor: 'transparent',
-						orientation: 'v',
-						remove: 'lasso2d'
-					}
-				}}
+				layout={plotLayout}
+				config={{ responsive: true }}
 				debounce={250}
+				bind:plot
 			/>
 		</div>
 
-		<form class="flex flex-row gap-2" on:submit|preventDefault={handleSubmit}>
+		<p class="flex justify-center">Try it out with your own demo!</p>
+		<form class="flex flex-row gap-2 justify-center" on:submit|preventDefault={handleSubmit}>
 			<input
 				type="text"
 				placeholder="demos.tf id"
