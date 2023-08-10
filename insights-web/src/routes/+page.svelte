@@ -132,25 +132,25 @@
 			/>
 			<button
 				class="
-				flex
-				items-center
-				justify-center
-				shadow-md
-				rounded-md
-				box-border
-				h-10
-				w-32
-				bg-gradient-to-r
-				from-indigo-500
-				from-10%
-				via-sky-500
-				via-30%
-				to-emerald-500
-				to-90%
-				transition
-				hover:ring
-				hover:ring-sky-200
-				"
+                flex
+                items-center
+                justify-center
+                shadow-md
+                rounded-md
+                box-border
+                h-10
+                w-32
+                bg-gradient-to-r
+                from-indigo-500
+                from-10%
+                via-sky-500
+                via-30%
+                to-emerald-500
+                to-90%
+                transition
+                hover:ring
+                hover:ring-sky-200
+                "
 			>
 				<p class="font-bold text-sky-50">Analyze!</p>
 			</button>
