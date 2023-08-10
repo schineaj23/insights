@@ -1,35 +1,17 @@
 use std::collections::HashMap;
 
-use insights::analyzer::analyzer::BombAttemptAnalyzer;
+use insights::analyzer::analyzer::{AnalyzerResult, BombAttemptAnalyzer};
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tf_demo_parser::{demo::Buffer, DemoParser, Stream};
+use tokio::time::Instant;
 use tracing::info;
 
 /// This is the main body for the function.
 /// Write your code inside it.
 /// There are some code example in the following URLs:
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-#[allow(dead_code)]
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
-    let who = event
-        .query_string_parameters_ref()
-        .and_then(|params| params.first("name"))
-        .unwrap_or("world");
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
-
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body(message.into())
-        .map_err(Box::new)?;
-
-    Ok(resp)
-}
 
 #[derive(Deserialize)]
 struct DemosApiResponse {
@@ -42,6 +24,41 @@ struct PlayerSummary {
     steamid: i64,
     attempts: i32,
     damage_per_attempt: f32,
+}
+
+fn analyze_demo(demo_bytes: Vec<u8>) -> Result<AnalyzerResult, Error> {
+    let demo_stream = Stream::new(Buffer::from(demo_bytes));
+    let (_, (attempts, users)) =
+        DemoParser::new_with_analyser(demo_stream, BombAttemptAnalyzer::new()).parse()?;
+    Ok((attempts, users))
+}
+
+fn package_summary(results: AnalyzerResult) -> Vec<PlayerSummary> {
+    let mut bomb_map: HashMap<u16, (i32, i32)> = HashMap::new();
+
+    for attempt in results.0 {
+        bomb_map
+            .entry(attempt.user)
+            .and_modify(|u| {
+                u.0 += 1;
+                u.1 += attempt.damage as i32;
+            })
+            .or_insert((1, attempt.damage as i32));
+    }
+
+    let mut players: Vec<PlayerSummary> = Vec::new();
+
+    for (uid, (cnt, dmg)) in bomb_map {
+        let user = results.1.get(&uid.into()).unwrap();
+        players.push(PlayerSummary {
+            name: user.name.clone(),
+            steamid: insights::steam_id::from_steamid3(&user.steam_id).unwrap(),
+            attempts: cnt,
+            damage_per_attempt: dmg as f32 / cnt as f32,
+        })
+    }
+
+    players
 }
 
 async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
@@ -64,38 +81,22 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
 
     info!("Demo {demo_id}: Finished download. Starting analysis");
 
+    let before = Instant::now();
     let demo_bytes: Vec<u8> = resp.bytes().await.unwrap().into();
-    let demo_stream = Stream::new(Buffer::from(demo_bytes));
-    let (_, (attempts, users)) =
-        DemoParser::new_with_analyser(demo_stream, BombAttemptAnalyzer::new()).parse()?;
+    let results = analyze_demo(demo_bytes)?;
 
-    info!("Demo {demo_id}: Finished analysis. Packaging");
+    info!(
+        "Demo {demo_id}: Finished Analysis in {:.2?}",
+        before.elapsed()
+    );
 
-    let mut bomb_map: HashMap<u16, (i32, i32)> = HashMap::new();
+    let before = Instant::now();
+    let players = package_summary(results);
 
-    for attempt in attempts {
-        bomb_map
-            .entry(attempt.user)
-            .and_modify(|u| {
-                u.0 += 1;
-                u.1 += attempt.damage as i32;
-            })
-            .or_insert((1, attempt.damage as i32));
-    }
-
-    let mut players: Vec<PlayerSummary> = Vec::new();
-
-    for (uid, (cnt, dmg)) in bomb_map {
-        let user = users.get(&uid.into()).unwrap();
-        players.push(PlayerSummary {
-            name: user.name.clone(),
-            steamid: insights::steam_id::from_steamid3(&user.steam_id).unwrap(),
-            attempts: cnt,
-            damage_per_attempt: dmg as f32 / cnt as f32,
-        })
-    }
-
-    info!("Demo {demo_id}: Finished packaging.");
+    info!(
+        "Demo {demo_id}: Packaging finished in {:.2?}",
+        before.elapsed()
+    );
 
     let resp = Response::builder()
         .status(200)
