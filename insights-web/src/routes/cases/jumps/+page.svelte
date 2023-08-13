@@ -1,6 +1,11 @@
 <script script lang="ts">
-	import Plot, { type Data, type Layout, type PlotlyHTMLElement } from 'svelte-plotly.js';
-	import type { PageServerData } from './$types';
+	import Plot, {
+		type Config,
+		type Data,
+		type Layout,
+		type PlotlyHTMLElement
+	} from 'svelte-plotly.js';
+	import type { PageServerData } from '$lib/$types';
 	export let data: PageServerData;
 	let inputId: string;
 	let plot: PlotlyHTMLElement;
@@ -43,6 +48,11 @@
 		legend: {
 			orientation: 'h'
 		}
+	};
+
+	const config: Partial<Config> = {
+		responsive: true,
+		watermark: false
 	};
 
 	interface Player {
@@ -103,23 +113,22 @@
 	}
 </script>
 
-<div class="container max-w-xl my-10 p-10 shadow-md">
-	<div class="flex flex-col justify-center gap-4">
-		<p class="text-5xl font-bold subpixel-antialiased">Tracking Jump Efficiency</p>
-		<p class="">
+<title>Jump Efficiency</title>
+<div class="container p-5 flex justify-center">
+	<article
+		class="prose lg:prose-xl prose-figure:max-w-lg prose-figure:rounded-xl prose-figure:shallow-md prose-figure:border"
+	>
+		<h1>Tracking Jump Efficiency</h1>
+		<p>
 			Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores ipsa dolorem voluptatem
 			dignissimos eaque. Sunt sapiente facilis tempore, debitis doloremque quisquam aut voluptatem
 			illo itaque tempora ipsum dicta, sequi porro?
 		</p>
 
-		<div class="max-w-lg rounded-xl shadow-md border">
-			<Plot
-				data={plotData}
-				layout={plotLayout}
-				config={{ responsive: true }}
-				debounce={250}
-				bind:plot
-			/>
+		<div class="flex justify-center">
+			<figure class="shallow-md shadow-xl">
+				<Plot data={plotData} layout={plotLayout} {config} debounce={250} bind:plot />
+			</figure>
 		</div>
 
 		<p class="flex justify-center">Try it out with your own demo!</p>
@@ -155,6 +164,5 @@
 				<p class="font-bold text-sky-50">Analyze!</p>
 			</button>
 		</form>
-		<p>helo</p>
-	</div>
+	</article>
 </div>

@@ -1,6 +1,6 @@
 import prisma from '$lib/prisma';
 import pl from 'nodejs-polars';
-import type { PageServerLoad } from '../$types';
+import type { PageServerLoad } from '$lib/$types';
 
 export const load = (async ({ params }) => {
 	// TODO: move this to lib files. This is a PoC/Mockup
