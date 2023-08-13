@@ -232,13 +232,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let log_insert_start = Instant::now();
-
-    let pool = db::connect().await?;
-
     if !args.insert_into_db {
         return Ok(());
     }
+
+    let log_insert_start = Instant::now();
+
+    let url = std::env::var("LOG_DATABASE_URL").expect("DATABASE_URL not set");
+    let pool = sqlx::PgPool::connect(&url).await?;
 
     for log_id in logs_cache.iter() {
         println!("Making request to logs.tf");

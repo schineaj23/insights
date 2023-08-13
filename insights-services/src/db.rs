@@ -6,11 +6,6 @@ use crate::log::{LogSerialized, PlayerStats};
 
 // TODO: create error enums
 
-pub async fn connect() -> Result<sqlx::PgPool, sqlx::Error> {
-    let url = std::env::var("LOG_DATABASE_URL").expect("DATABASE_URL not set");
-    sqlx::PgPool::connect(&url).await
-}
-
 pub async fn insert_team(
     pool: &sqlx::PgPool,
     team_name: &str,
