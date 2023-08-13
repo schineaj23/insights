@@ -1,160 +1,132 @@
-<script script lang="ts">
-	import Plot, { type Data, type Layout, type PlotlyHTMLElement } from 'svelte-plotly.js';
-	import type { PageServerData } from './$types';
-	export let data: PageServerData;
-	let inputId: string;
-	let plot: PlotlyHTMLElement;
+<div class="bg-white">
+	<header class="absolute inset-x-0 top-0 z-50">
+		<nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+			<div class="flex lg:flex-1">
+				<a href="#" class="-m-1.5 p-1.5">
+					<span class="sr-only">Your Company</span>
+					<img
+						class="h-8 w-auto"
+						src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+						alt=""
+					/>
+				</a>
+			</div>
+			<div class="flex lg:hidden">
+				<button
+					type="button"
+					class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+				>
+					<span class="sr-only">Open main menu</span>
+					<svg
+						class="h-6 w-6"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						aria-hidden="true"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+						/>
+					</svg>
+				</button>
+			</div>
+			<div class="hidden lg:flex lg:gap-x-12">
+				<a href="#" class="text-sm font-semibold leading-6 text-gray-900">Blog</a>
+				<a href="#" class="text-sm font-semibold leading-6 text-gray-900">Projects</a>
+			</div>
+		</nav>
+		<!-- Mobile menu, show/hide based on menu open state. -->
+		<div class="lg:hidden" role="dialog" aria-modal="true">
+			<!-- Background backdrop, show/hide based on slide-over state. -->
+			<div class="fixed inset-0 z-50" />
+			<div
+				class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10"
+			>
+				<div class="flex items-center justify-between">
+					<a href="#" class="-m-1.5 p-1.5">
+						<span class="sr-only">Your Company</span>
+						<img
+							class="h-8 w-auto"
+							src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+							alt=""
+						/>
+					</a>
+					<button type="button" class="-m-2.5 rounded-md p-2.5 text-gray-700">
+						<span class="sr-only">Close menu</span>
+						<svg
+							class="h-6 w-6"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							aria-hidden="true"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+				<div class="mt-6 flow-root">
+					<div class="-my-6 divide-y divide-gray-500/10">
+						<div class="space-y-2 py-6">
+							<a
+								href="#"
+								class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+								>Blog</a
+							>
+							<a
+								href="#"
+								class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+								>Projects</a
+							>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
 
-	let plotData: Data[] = [
-		{
-			x: data.x,
-			y: data.y,
-			type: 'scatter',
-			mode: 'markers',
-			name: 'S12 Invite',
-			marker: {
-				color: data.y,
-				colorscale: 'Portland'
-			},
-			hoverinfo: 'x+y+text',
-			hovertext: data.labels
-		}
-	];
-
-	let plotLayout: Partial<Layout> = {
-		title: 'Mean Bomb Damage vs Number of Attempts',
-		xaxis: { title: 'Number of Attempts' },
-		yaxis: { title: 'Mean Bomb Damage' },
-		font: {
-			family:
-				'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
-		},
-		autosize: true,
-		showlegend: false,
-		paper_bgcolor: 'transparent',
-		plot_bgcolor: 'transparent',
-		modebar: {
-			activecolor: '#082f49',
-			color: '#082f49',
-			bgcolor: 'transparent',
-			orientation: 'v',
-			remove: 'lasso2d'
-		},
-		legend: {
-			orientation: 'h'
-		}
-	};
-
-	interface Player {
-		name: string;
-		steamid: number;
-		attempts: number;
-		damage_per_attempt: number;
-	}
-
-	interface RequestResponse {
-		players: Player[];
-	}
-
-	async function handleSubmit() {
-		if (inputId === null) {
-			return;
-		}
-
-		if (/[a-zA-Z]/i.test(inputId)) {
-			throw 'Only numbers allowed in input';
-		}
-
-		const req: RequestResponse = await (await fetch(`/api/bomb/${inputId}`)).json();
-
-		let dpa_x: number[] = [];
-		let attempt_y: number[] = [];
-		let player_labels: string[] = [];
-
-		const userTrace: Data = {
-			x: dpa_x,
-			y: attempt_y,
-			type: 'scatter',
-			mode: 'markers',
-			name: 'Your Demo',
-			marker: {
-				symbol: 'star-dot',
-				size: 14
-			},
-			hoverinfo: 'x+y+text',
-			hovertext: player_labels
-		};
-
-		req.players.forEach((p: Player) => {
-			dpa_x.push(p.damage_per_attempt);
-			attempt_y.push(p.damage_per_attempt);
-			player_labels.push(p.name);
-		});
-
-		if (plotData.length > 1) {
-			plotData[1] = userTrace;
-		} else {
-			plotData.push(userTrace);
-		}
-
-		// FIXME: Evil hack to force-update the plot
-		const Plotly = (await import('plotly.js-dist')).default;
-		Plotly.react(plot, plotData, { ...plotLayout, showlegend: true }, [1]);
-	}
-</script>
-
-<div class="container max-w-xl my-10 p-10 shadow-md">
-	<div class="flex flex-col justify-center gap-4">
-		<p class="text-5xl font-bold subpixel-antialiased">Tracking Jump Efficiency</p>
-		<p class="">
-			Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores ipsa dolorem voluptatem
-			dignissimos eaque. Sunt sapiente facilis tempore, debitis doloremque quisquam aut voluptatem
-			illo itaque tempora ipsum dicta, sequi porro?
-		</p>
-
-		<div class="max-w-lg rounded-xl shadow-md border">
-			<Plot
-				data={plotData}
-				layout={plotLayout}
-				config={{ responsive: true }}
-				debounce={250}
-				bind:plot
+	<div class="relative isolate px-6 pt-14 lg:px-8">
+		<div
+			class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+			aria-hidden="true"
+		>
+			<div
+				class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+				style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
 			/>
 		</div>
-
-		<p class="flex justify-center">Try it out with your own demo!</p>
-		<form class="flex flex-row gap-2 justify-center" on:submit|preventDefault={handleSubmit}>
-			<input
-				type="text"
-				placeholder="demos.tf id"
-				class="rounded-md transition hover:shadow-md hover:ring hover:ring-sky-200"
-				bind:value={inputId}
+		<div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+			<div class="text-center">
+				<h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+					Data driven stories.
+				</h1>
+				<p class="mt-6 text-lg leading-8 text-gray-600">
+					Providing advanced insight, and creating hard data for qualitative metrics. The site is a
+					work in progress.
+				</p>
+				<div class="mt-10 flex items-center justify-center gap-x-6">
+					<a
+						href="#"
+						class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+						>Get started</a
+					>
+					<a href="#" class="text-sm font-semibold leading-6 text-gray-900"
+						>Learn more <span aria-hidden="true">→</span></a
+					>
+				</div>
+			</div>
+		</div>
+		<div
+			class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
+			aria-hidden="true"
+		>
+			<div
+				class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
+				style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
 			/>
-			<button
-				class="
-                flex
-                items-center
-                justify-center
-                shadow-md
-                rounded-md
-                box-border
-                h-10
-                w-32
-                bg-gradient-to-r
-                from-indigo-500
-                from-10%
-                via-sky-500
-                via-30%
-                to-emerald-500
-                to-90%
-                transition
-                hover:ring
-                hover:ring-sky-200
-                "
-			>
-				<p class="font-bold text-sky-50">Analyze!</p>
-			</button>
-		</form>
-		<p>helo</p>
+		</div>
 	</div>
 </div>
