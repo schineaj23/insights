@@ -9,8 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = Arguments::from_env();
     let demo: String = args.value_from_str(["-d", "--demo"]).unwrap_or_else(|_| {
         eprintln!(
-            "USAGE: analyzer [-d --demo file.dem] [-a]
-            -a          Retrieve and analyze demos from database
+            "USAGE: analyzer [-d --demo file.dem]
             -d, --demo  Analyze specific demo"
         );
         std::process::exit(1);
