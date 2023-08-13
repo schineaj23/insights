@@ -2,6 +2,7 @@ use futures::StreamExt;
 use insights::db::{self, ConnectedDemo};
 use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, Pool, Postgres};
 use std::sync::Arc;
+use steamid_ng::SteamID;
 use tf_demo_parser::{
     demo::{parser::gamestateanalyser::UserId, Buffer},
     DemoParser, Stream,
@@ -35,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
             for (i, attempt) in attempts.iter().enumerate() {
                 let id3 = &users.get(&UserId::from(attempt.user)).unwrap().steam_id;
-                let id = insights::steam_id::from_steamid3(id3).unwrap();
+                let id = SteamID::from_steam3(id3).unwrap().account_id() as i64;
 
                 let mut a = pool.acquire().await.unwrap();
                 match insert_bomb_attempt(&mut a, attempt, id, demo.log_id).await {

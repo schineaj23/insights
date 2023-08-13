@@ -6,16 +6,16 @@ use dotenv::dotenv;
 use insights::collect;
 use insights::collect::Collector;
 use insights::db;
+use insights::log::fetch_log;
 use insights::log::LogSerialized;
 use insights::log::PlayerStats;
 use insights::rgl;
-use insights::steam_id;
 use pico_args::Arguments;
-use reqwest::Response;
 use std::{collections::HashMap, fs::File, io::BufReader};
+use steamid_ng::SteamID;
 use tokio::time::Instant;
 
-#[cached(size = 200)]
+#[cached(size = 200, option)]
 async fn fetch_team_id_for_player(player_id: String) -> Option<i32> {
     match get_team_id_from_player_lut(&player_id) {
         Some(team_id) => {
@@ -27,11 +27,7 @@ async fn fetch_team_id_for_player(player_id: String) -> Option<i32> {
                 "Could not find team_id from LUT, asking RGL API for player {}",
                 player_id
             );
-            let res: Response =
-                reqwest::get(format!("https://api.rgl.gg/v0/profile/{}", player_id))
-                    .await
-                    .ok()?;
-            let player = res.json::<rgl::Player>().await.ok()?;
+            let player = rgl::search_player(&player_id).await.unwrap();
             let team = player.current_teams.get("sixes")?;
 
             match team {
@@ -61,7 +57,7 @@ async fn determine_team_ids_for_match(
     let mut last_blu_id = 0;
     let mut visited = 0;
     for (id, player) in player_map.iter() {
-        let id64 = steam_id::from_steamid3(id).unwrap().to_string();
+        let id64 = SteamID::from_steam3(&id).unwrap().account_id().to_string();
         let team_id = match fetch_team_id_for_player(id64).await {
             Some(id) => id,
             None => {
@@ -106,7 +102,7 @@ struct Args {
     offset: i32,
 }
 
-fn get_insights_dir() -> String {
+fn get_config_dir() -> String {
     let path: String = match home::home_dir() {
         Some(dir) => dir.to_str().unwrap().to_owned(),
         None => "/".to_owned(),
@@ -145,7 +141,7 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         Ok(offset_str) => offset_str.parse::<i32>().ok(),
         Err(e) => match e {
             pico_args::Error::MissingOption(_) => {
-                match std::fs::read_to_string(get_insights_dir() + "/last_run") {
+                match std::fs::read_to_string(get_config_dir() + "/last_run") {
                     Ok(o) => o.parse::<i32>().ok(),
                     Err(err) => {
                         println!("Error reading from last_run: {}", err);
@@ -188,7 +184,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = BufReader::new(file);
 
     // Create cache directory if it doesn't exist already
-    std::fs::create_dir_all(get_insights_dir())?;
+    std::fs::create_dir_all(get_config_dir())?;
 
     let team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
@@ -231,7 +227,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Save current timestamp as next offset
     let utc_now: DateTime<Utc> = Utc::now();
     tokio::fs::write(
-        get_insights_dir() + "/last_run",
+        get_config_dir() + "/last_run",
         utc_now.timestamp().to_string(),
     )
     .await?;
@@ -249,10 +245,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let start_time = Instant::now();
 
-        let log: LogSerialized = reqwest::get(format!("http://logs.tf/json/{}", log_id))
-            .await?
-            .json::<LogSerialized>()
-            .await?;
+        let log: LogSerialized = fetch_log(log_id).await?;
 
         // Why do we bother processing if it is past our offset anyways
         if log.info.date < collector.offset {
@@ -273,7 +266,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for (player_id, stats) in log.players.iter() {
             let start_time = Instant::now();
 
-            let player_id = steam_id::from_steamid3(player_id).unwrap();
+            let player_id = SteamID::from_steam3(player_id)?.account_id() as i64;
 
             // If it is a ringer, just ignore we don't care. It would probably throw an error in DB anyways
             let team_id = match fetch_team_id_for_player(player_id.to_string()).await {

@@ -4,6 +4,7 @@ use insights::analyzer::analyzer::{AnalyzerResult, BombAttemptAnalyzer};
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use steamid_ng::SteamID;
 use tf_demo_parser::{demo::Buffer, DemoParser, Stream};
 use tokio::time::Instant;
 use tracing::info;
@@ -50,9 +51,10 @@ fn package_summary(results: AnalyzerResult) -> Vec<PlayerSummary> {
 
     for (uid, (cnt, dmg)) in bomb_map {
         let user = results.1.get(&uid.into()).unwrap();
+        let id = SteamID::from_steam3(&user.steam_id).unwrap().account_id() as i64;
         players.push(PlayerSummary {
             name: user.name.clone(),
-            steamid: insights::steam_id::from_steamid3(&user.steam_id).unwrap(),
+            steamid: id,
             attempts: cnt,
             damage_per_attempt: dmg as f32 / cnt as f32,
         })

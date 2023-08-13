@@ -57,3 +57,4 @@ tf-demo-parser = { git = "https://github.com/demostf/parser.git" }
 log = "0.4.19"
 tokio-stream = "0.1.14"
 futures = "0.3.28"
+steamid-ng = "1.0.0"

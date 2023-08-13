@@ -2,6 +2,7 @@ use insights::analyzer::analyzer::{BombAttempt, BombAttemptAnalyzer};
 use log::debug;
 use pico_args::Arguments;
 use std::{collections::HashMap, fs, time::Instant};
+use steamid_ng::SteamID;
 use tf_demo_parser::{Demo, DemoParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -47,9 +48,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     for (uid, (cnt, cnt_dmg, dmg)) in dmg {
+        let id = SteamID::from_steam3(&users.get(&uid.into()).unwrap().steam_id)?.account_id();
         println!(
             "Uid: {:?}, NumBombs: {}, Dmg/Bomb: {:.2}, NonzeroDmgBombs: {} BombEff: {:.2}%",
-            insights::steam_id::from_steamid3(&users.get(&uid.into()).unwrap().steam_id),
+            id,
             cnt,
             dmg as f64 / cnt as f64,
             cnt_dmg,

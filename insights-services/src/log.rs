@@ -1,7 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error};
 
 use serde::Deserialize;
 use serde_json::Value;
+
+const API_URL: &'static str = "http://logs.tf/api/v1/log";
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -60,9 +62,43 @@ pub struct LogSerialized {
     pub info: LogInfo,
 }
 
+// Calling this a "log view" since it is the small metadata returned from the log search api
+#[allow(dead_code)]
+#[derive(Debug, Deserialize, Clone)]
+pub struct LogView {
+    pub date: i32,
+    pub id: i32,
+    pub map: String,
+    pub players: i32,
+    pub title: String,
+    pub views: i32,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Deserialize)]
+pub struct SearchResult {
+    pub logs: Vec<LogView>,
+    pub parameters: Value,
+    pub results: i32,
+    pub success: bool,
+    pub total: i32,
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct LogInfo {
     pub map: String,
     pub date: i32,
+}
+
+pub async fn search_by_players(players: &str) -> Result<SearchResult, Box<dyn Error>> {
+    let res = reqwest::get(format!("{API_URL}?player={players}")).await?;
+    let search = res.json::<SearchResult>().await?;
+    Ok(search)
+}
+
+pub async fn fetch_log(log_id: &i32) -> Result<LogSerialized, Box<dyn Error>> {
+    let res = reqwest::get(format!("{API_URL}/{log_id}")).await?;
+    let log = res.json::<LogSerialized>().await?;
+    Ok(log)
 }

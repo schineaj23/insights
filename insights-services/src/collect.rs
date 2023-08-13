@@ -6,8 +6,9 @@ use std::{
 
 use itertools::Itertools;
 use serde::Deserialize;
-use serde_json::Value;
 use tokio::time::Instant;
+
+use crate::log::search_by_players;
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -16,34 +17,11 @@ pub struct Team {
     pub players: HashMap<String, String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Deserialize)]
-struct LogsResult {
-    logs: Vec<LogView>,
-    parameters: Value,
-    results: i32,
-    success: bool,
-    total: i32,
-}
-
-// Calling this a "log view" since it is the small metadata returned from the log search api
-#[allow(dead_code)]
-#[derive(Debug, Deserialize, Clone)]
-struct LogView {
-    date: i32,
-    id: i32,
-    map: String,
-    players: i32,
-    title: String,
-    views: i32,
-}
-
 pub struct Collector {
     log_id_cache: HashSet<i32>,
     pub offset: i32,
 }
 
-#[allow(dead_code)]
 impl Collector {
     pub fn new(offset: i32) -> Self {
         Collector {
@@ -75,13 +53,7 @@ impl Collector {
         &mut self,
         player_ids: &Vec<String>,
     ) -> Result<i32, Box<dyn Error>> {
-        let search_result = reqwest::get(format!(
-            "http://logs.tf/api/v1/log?player={}",
-            player_ids.join(",")
-        ))
-        .await?
-        .json::<LogsResult>()
-        .await?;
+        let search_result = search_by_players(&player_ids.join(",")).await?;
 
         let mut collected = 0;
         search_result.logs.iter().for_each(|log| {

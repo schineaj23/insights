@@ -1,6 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error};
 
 use serde::Deserialize;
+
+const API_URL: &'static str = "https://api.rgl.gg/v0";
 
 #[derive(Debug, Deserialize)]
 pub struct Team {
@@ -20,4 +22,10 @@ pub struct Team {
 pub struct Player {
     #[serde(rename(deserialize = "currentTeams"))]
     pub current_teams: HashMap<String, Option<crate::rgl::Team>>,
+}
+
+pub async fn search_player(player_id: &str) -> Result<Player, Box<dyn Error>> {
+    let resp = reqwest::get(format!("{API_URL}/profile/{}", player_id)).await?;
+    let parsed = resp.json::<Player>().await?;
+    Ok(parsed)
 }
