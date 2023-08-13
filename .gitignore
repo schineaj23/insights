@@ -160,3 +160,4 @@ cython_debug/
 # testing script that leaks all of my info
 demo_finder.py
 dumped-logs.txt
+package-lock.json
