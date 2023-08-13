@@ -87,7 +87,9 @@ impl MessageHandler for BombAttemptAnalyzer {
         match message {
             Message::PacketEntities(message) => {
                 for entity in &message.entities {
-                    self.handle_entity(entity, state);
+                    if entity.in_pvs {
+                        self.handle_entity(entity, state);
+                    }
                 }
             }
             Message::GameEvent(message) => self.handle_game_event(&message.event, tick),
