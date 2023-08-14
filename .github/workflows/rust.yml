@@ -16,9 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Navigate to correct directory
-      run: cd /home/runner/work/insights/insights/insights-services
     - name: Build
+      working-directory: ./insights-services
       run: cargo build --verbose
     - name: Run tests
+      working-directory: ./insights-services
       run: cargo test --verbose
