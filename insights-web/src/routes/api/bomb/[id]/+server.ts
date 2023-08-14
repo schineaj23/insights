@@ -1,3 +1,5 @@
-export async function GET({ params }) {
-	return fetch(`http://127.0.0.1:9000?id=${params.id}`);
+import { ANALYZE_FUNCTION_URL } from '$env/static/private';
+
+export async function GET({ params }): Promise<Response> {
+	return fetch(`${ANALYZE_FUNCTION_URL}?id=${params.id}`);
 }

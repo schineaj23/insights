@@ -64,10 +64,18 @@ fn package_summary(results: AnalyzerResult) -> Vec<PlayerSummary> {
 }
 
 async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
-    let demo_id = event
+    let params = event
         .query_string_parameters_ref()
-        .and_then(|params| params.first("id"))
-        .expect("no id found");
+        .and_then(|params| params.first("id"));
+    let demo_id = match params {
+        Some(id) => id,
+        None => {
+            let resp = Response::builder()
+                .header("content-type", "application/json")
+                .body(json!({"error": "Invalid arguments"}).to_string().into())?;
+            return Ok(resp);
+        }
+    };
 
     info!("Demo {demo_id}: Querying demos.tf for download URL");
 
@@ -78,6 +86,13 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
         .await?;
 
     info!("Demo {demo_id}: Found URL, starting download.");
+
+    if demos_resp.url.is_empty() {
+        let resp = Response::builder()
+            .header("content-type", "application/json")
+            .body(json!({"error": "URL does not exist"}).to_string().into())?;
+        return Ok(resp);
+    }
 
     let resp = reqwest::get(demos_resp.url).await?;
 
