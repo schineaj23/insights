@@ -1,3 +1,4 @@
+<title>insights</title>
 <div class="grid mt-48 place-items-center">
 	<div class="text-center">
 		<h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
