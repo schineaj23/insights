@@ -58,9 +58,9 @@ pub async fn write_to_cache(client: &Client, item: Item) -> Result<(), BoxError>
         .item("id", id_av)
         .item("body", body_av);
 
-    info!("Executing request [{request:?}], adding item to table.");
+    info!("Executing request, adding item to table.");
 
-    let _resp = request.send().await?;
+    request.send().await?;
 
     Ok(())
 }
