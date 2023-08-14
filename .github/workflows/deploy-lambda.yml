@@ -23,10 +23,10 @@ jobs:
           aws-region: us-east-1
           role-duration-seconds: 1200
           role-session-name: GithubActionsDeploy
+      - name: Setup Python
+        uses: actions/setup-python@v4.7.0
       - name: Install cargo-lambda
-        run: |
-          brew tap cargo-lambda/cargo-lambda
-          brew install cargo-lambda
+        run: pip3 install cargo-lambda
       - name: Build Lambda Function
         working-directory: ./insights-services/functions
         run: cargo lambda build --release --arm64 --output-format zip
