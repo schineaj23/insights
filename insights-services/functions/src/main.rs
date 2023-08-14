@@ -1,3 +1,5 @@
+mod cache;
+
 use std::collections::HashMap;
 
 use insights::analyzer::analyzer::{AnalyzerResult, BombAttemptAnalyzer};
@@ -8,6 +10,8 @@ use steamid_ng::SteamID;
 use tf_demo_parser::{demo::Buffer, DemoParser, Stream};
 use tokio::time::Instant;
 use tracing::info;
+
+use crate::cache::Item;
 
 /// This is the main body for the function.
 /// Write your code inside it.
@@ -67,6 +71,7 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
     let params = event
         .query_string_parameters_ref()
         .and_then(|params| params.first("id"));
+
     let demo_id = match params {
         Some(id) => id,
         None => {
@@ -76,6 +81,16 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
             return Ok(resp);
         }
     };
+
+    // Look up in cache and return value if exists
+    let client = cache::get_client().await?;
+    if let Ok(item) = cache::check_in_cache(&client, demo_id).await {
+        info!("Demo {demo_id}: Cache hit!");
+        let resp = Response::builder()
+            .header("content-type", "application/json")
+            .body(item.body.into())?;
+        return Ok(resp);
+    }
 
     info!("Demo {demo_id}: Querying demos.tf for download URL");
 
@@ -115,10 +130,22 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
         before.elapsed()
     );
 
+    let body = json!({ "players": players }).to_string();
+
+    // Add this response to cache
+    cache::write_to_cache(
+        &client,
+        Item {
+            id: demo_id.to_string(),
+            body: body.clone(),
+        },
+    )
+    .await?;
+
     let resp = Response::builder()
         .status(200)
         .header("content-type", "application/json")
-        .body(json!({ "players": players }).to_string().into())
+        .body(body.into())
         .map_err(Box::new)?;
 
     Ok(resp)
