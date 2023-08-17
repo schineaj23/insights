@@ -109,14 +109,14 @@ class TestScraper(unittest.TestCase):
         self.gen.add_division(0)
 
     def test_teams_invite(self):
-        with open("generators\\test\\players_only_starters.json", "r") as f:
+        with open("generators/test/players_only_starters.json", "r") as f:
             test_teams = json.load(f)
 
             self.assertEqual(len(test_teams), len(self.gen.teams))
             self.assertEqual(test_teams, self.gen.teams)
 
     def test_player_lut(self):
-        with open("generators\\test\\player_teamid_lut.json", "r") as f:
+        with open("generators/test/player_teamid_lut.json", "r") as f:
             test_flattened_players = json.load(f)
 
             self.assertEqual(
