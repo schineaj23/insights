@@ -17,13 +17,30 @@ export const load = (async ({ params }) => {
 		.filter(pl.col('id_count').greaterThan(50));
 	// Minimum 50 attempts
 
+	let feedTabulation = grouped
+		.agg(pl.col('damage').sum(), pl.col('damage_taken').sum())
+		.select('player_id', pl.col('damage_taken').div(pl.col('damage')))
+		.join(grouped.count(), { on: 'player_id' })
+		.sort('damage_taken')
+		.filter(pl.col('id_count').greaterThan(50));
+	// Minimum 100 attempts, limit 50 so I can render all of them
+
+	const feedLabels = feedTabulation.getColumn('player_id').toArray();
+	const feedRatio = feedTabulation.getColumn('damage_taken').toArray();
+
 	const playerIds = tabulation.getColumn('player_id').toArray();
 	const attemptsByPlayer = tabulation.getColumn('id_count').toArray();
 	const averageDamageByPlayer = tabulation.getColumn('damage').toArray();
 
 	return {
-		labels: playerIds,
-		y: averageDamageByPlayer,
-		x: attemptsByPlayer
+		dpaData: {
+			labels: playerIds,
+			y: averageDamageByPlayer,
+			x: attemptsByPlayer
+		},
+		feedData: {
+			labels: feedLabels,
+			y: feedRatio
+		}
 	};
 }) satisfies PageServerLoad;

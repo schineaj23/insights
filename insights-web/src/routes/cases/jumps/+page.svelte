@@ -1,70 +1,39 @@
 <script script lang="ts">
-	import Plot, {
-		type Config,
-		type Data,
-		type Layout,
-		type PlotlyHTMLElement
-	} from 'svelte-plotly.js';
+	import Plot, { type Config, type Data, type PlotlyHTMLElement } from 'svelte-plotly.js';
 	import type { PageServerData } from '$lib/$types';
+	import { createLayout } from './graph';
 	export let data: PageServerData;
 	let inputId: string;
 	let plot: PlotlyHTMLElement;
 
-	let plotData: Data[] = [
+	let dpaData: Data[] = [
 		{
-			x: data.x,
-			y: data.y,
+			x: data.dpaData.x,
+			y: data.dpaData.y,
 			type: 'scatter',
 			mode: 'markers',
 			name: 'S12 Invite',
 			marker: {
-				color: data.y,
+				color: data.dpaData.y,
 				colorscale: 'Portland'
 			},
 			hoverinfo: 'x+y+text',
-			hovertext: data.labels
+			hovertext: data.dpaData.labels
 		}
 	];
 
-	let plotLayout: Partial<Layout> = {
-		title: 'Mean Bomb Damage vs Number of Attempts',
-		xaxis: { title: 'Number of Attempts' },
-		yaxis: { title: 'Mean Bomb Damage' },
-		font: {
-			family:
-				'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
-		},
-		autosize: true,
-		showlegend: false,
-		paper_bgcolor: 'transparent',
-		plot_bgcolor: 'transparent',
-		modebar: {
-			activecolor: '#082f49',
-			color: '#082f49',
-			bgcolor: 'transparent',
-			orientation: 'v',
-			remove: 'lasso2d'
-		},
-		legend: {
-			orientation: 'h'
-		}
-	};
+	const dpaLayout = createLayout(
+		'Mean Bomb Damage vs Number of Attempts',
+		'Number of Attempts',
+		'Mean Bomb Damage'
+	);
+
+	const feedLayout = createLayout('Damage Ratio by Players', 'Player', 'Damage Ratio');
 
 	const config: Partial<Config> = {
 		responsive: true,
 		watermark: false
 	};
-
-	interface Player {
-		name: string;
-		steamid: number;
-		attempts: number;
-		damage_per_attempt: number;
-	}
-
-	interface RequestResponse {
-		players: Player[];
-	}
 
 	async function handleSubmit() {
 		if (inputId === null) {
@@ -101,33 +70,49 @@
 			player_labels.push(p.name);
 		});
 
-		if (plotData.length > 1) {
-			plotData[1] = userTrace;
+		if (dpaData.length > 1) {
+			dpaData[1] = userTrace;
 		} else {
-			plotData.push(userTrace);
+			dpaData.push(userTrace);
 		}
 
 		// FIXME: Evil hack to force-update the plot
 		const Plotly = (await import('plotly.js-dist')).default;
-		Plotly.react(plot, plotData, { ...plotLayout, showlegend: true }, [1]);
+		Plotly.react(plot, dpaData, { dpaLayout }, [1], config);
 	}
+
+	console.log(data.feedData);
 </script>
 
 <title>Jump Efficiency</title>
 <div class="container p-5 flex justify-center">
 	<article
-		class="prose lg:prose-xl prose-figure:max-w-lg prose-figure:rounded-xl prose-figure:shallow-md prose-figure:border"
+		class="prose lg:prose-xl prose-figure:rounded-xl prose-figure:shallow-md prose-figure:border"
 	>
-		<h1>Tracking Jump Efficiency</h1>
+		<h1>Separating the Players from the Pretenders</h1>
 		<p>
-			Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores ipsa dolorem voluptatem
-			dignissimos eaque. Sunt sapiente facilis tempore, debitis doloremque quisquam aut voluptatem
-			illo itaque tempora ipsum dicta, sequi porro?
+			Some soldiers have the reputation as "feeders" while others are respected for their knowledge
+			of when to value their life. This quality is assigned by the "eye test" watching demos or
+			looking at DPM and deaths in logs. I sought out to create a better metric which tracked
+			individual jump attempts rather than running totals.
+		</p>
+
+		<h3>Introducing Jump Efficiency</h3>
+
+		<p>
+			Jump Efficiency is a stat created by measuring the average damage and kills per rocket jump
+			attempt. Each "attempt" is started by a <code>RocketJumpStarted</code> event and ends at death
+			or 3 seconds after the <code>RocketJumpLanded</code> event is triggered.
+		</p>
+
+		<p>
+			Plotting the average bomb damage vs the number of attempts, we can see who is getting the most
+			damage per the amount of total bomb attempts in the season.
 		</p>
 
 		<div class="flex justify-center">
 			<figure class="shallow-md shadow-xl">
-				<Plot data={plotData} layout={plotLayout} {config} debounce={250} bind:plot />
+				<Plot data={dpaData} layout={dpaLayout} {config} debounce={250} bind:plot />
 			</figure>
 		</div>
 
@@ -164,5 +149,53 @@
 				<p class="font-bold text-sky-50">Analyze!</p>
 			</button>
 		</form>
+
+		<h3>The Biggest Feeders</h3>
+		<p>
+			Going a step further from before, we can quantify the "feed factor" by taking the ratio
+			between damage recieved and damage dealt per bomb. The higher the ratio is, so is the "feed
+			factor"
+		</p>
+
+		<p>
+			...and the results seem to pass the eye-test as well. From the dataset of RGL season 12 Invite
+			scrims/matches including against Advanced players, {data.feedData.labels[0]} has the best damage
+			ratio (lowest feed factor) of all players at <b>{data.feedData.y[0].toFixed(3)}</b> dt/dmg.
+		</p>
+
+		<div class="flex justify-center">
+			<figure class="shallow-md shadow-xl">
+				<Plot
+					data={[
+						{
+							labels: data.feedData.labels,
+							marker: {
+								color: data.feedData.y,
+								colorscale: 'Portland'
+							},
+							hovertext: data.feedData.labels,
+							y: data.feedData.y,
+							type: 'bar',
+							name: 'S12 Invite'
+						}
+					]}
+					layout={feedLayout}
+					{config}
+					debounce={250}
+				/>
+			</figure>
+		</div>
+
+		<h3>The Final Stat</h3>
+		<p>
+			Talk about creating the final statistic, picking the treshold to use and if bomb attempts for
+			soldiers predicts or is correlated to the win percentage of the log
+		</p>
 	</article>
 </div>
+
+<style>
+	:global(.plot-container) {
+		scale: 1;
+	}
+</style>
