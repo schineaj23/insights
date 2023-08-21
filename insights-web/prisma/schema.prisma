@@ -37,6 +37,7 @@ model player {
   id           Int            @id @default(autoincrement())
   steamid64    BigInt         @unique
   team_id      Int?
+  name         String?        @db.VarChar(255)
   bomb_attempt bomb_attempt[]
   player_stats player_stats[]
 }

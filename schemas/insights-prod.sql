@@ -5,6 +5,8 @@
 -- Dumped from database version 15.3
 -- Dumped by pg_dump version 15.3
 
+-- Started on 2023-08-20 20:59:05
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -17,22 +19,61 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- TOC entry 7 (class 2615 OID 16796)
+-- Name: aiven_extras; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA aiven_extras;
+
+
+ALTER SCHEMA aiven_extras OWNER TO postgres;
+
+--
+-- TOC entry 8 (class 2615 OID 2200)
 -- Name: public; Type: SCHEMA; Schema: -; Owner: avnadmin
 --
 
-CREATE SCHEMA public;
+-- *not* creating schema, since initdb creates it
 
 
 ALTER SCHEMA public OWNER TO avnadmin;
 
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: avnadmin
+-- TOC entry 2 (class 3079 OID 16797)
+-- Name: aiven_extras; Type: EXTENSION; Schema: -; Owner: -
 --
 
-COMMENT ON SCHEMA public IS 'standard public schema';
+CREATE EXTENSION IF NOT EXISTS aiven_extras WITH SCHEMA aiven_extras;
 
 
 --
+-- TOC entry 4461 (class 0 OID 0)
+-- Dependencies: 2
+-- Name: EXTENSION aiven_extras; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION aiven_extras IS 'aiven_extras';
+
+
+--
+-- TOC entry 3 (class 3079 OID 16936)
+-- Name: postgres_fdw; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgres_fdw WITH SCHEMA public;
+
+
+--
+-- TOC entry 4462 (class 0 OID 0)
+-- Dependencies: 3
+-- Name: EXTENSION postgres_fdw; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION postgres_fdw IS 'foreign-data wrapper for remote PostgreSQL servers';
+
+
+--
+-- TOC entry 245 (class 1255 OID 16649)
 -- Name: collect_win_pct(); Type: FUNCTION; Schema: public; Owner: avnadmin
 --
 
@@ -59,6 +100,7 @@ $$;
 ALTER FUNCTION public.collect_win_pct() OWNER TO avnadmin;
 
 --
+-- TOC entry 246 (class 1255 OID 16650)
 -- Name: get_win_count(integer); Type: FUNCTION; Schema: public; Owner: avnadmin
 --
 
@@ -86,11 +128,38 @@ $$;
 
 ALTER FUNCTION public.get_win_count(team_id integer) OWNER TO avnadmin;
 
+--
+-- TOC entry 2122 (class 1417 OID 16945)
+-- Name: demos_remote; Type: SERVER; Schema: -; Owner: avnadmin
+--
+
+CREATE SERVER demos_remote FOREIGN DATA WRAPPER postgres_fdw OPTIONS (
+    dbname 'xx',
+    host 'xxx',
+    port 'xx',
+    sslmode 'require'
+);
+
+
+ALTER SERVER demos_remote OWNER TO avnadmin;
+
+--
+-- TOC entry 4480 (class 0 OID 0)
+-- Name: USER MAPPING avnadmin SERVER demos_remote; Type: USER MAPPING; Schema: -; Owner: avnadmin
+--
+
+CREATE USER MAPPING FOR avnadmin SERVER demos_remote OPTIONS (
+    password 'xxx',
+    "user" 'xxxx'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
+-- TOC entry 217 (class 1259 OID 16653)
 -- Name: bomb_attempt; Type: TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -109,6 +178,7 @@ CREATE TABLE public.bomb_attempt (
 ALTER TABLE public.bomb_attempt OWNER TO avnadmin;
 
 --
+-- TOC entry 218 (class 1259 OID 16656)
 -- Name: bomb_attempt_id_seq; Type: SEQUENCE; Schema: public; Owner: avnadmin
 --
 
@@ -124,6 +194,8 @@ CREATE SEQUENCE public.bomb_attempt_id_seq
 ALTER TABLE public.bomb_attempt_id_seq OWNER TO avnadmin;
 
 --
+-- TOC entry 4482 (class 0 OID 0)
+-- Dependencies: 218
 -- Name: bomb_attempt_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: avnadmin
 --
 
@@ -131,6 +203,7 @@ ALTER SEQUENCE public.bomb_attempt_id_seq OWNED BY public.bomb_attempt.id;
 
 
 --
+-- TOC entry 230 (class 1259 OID 16947)
 -- Name: demos; Type: FOREIGN TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -234,6 +307,7 @@ ALTER FOREIGN TABLE public.demos ALTER COLUMN red_team_id OPTIONS (
 ALTER FOREIGN TABLE public.demos OWNER TO avnadmin;
 
 --
+-- TOC entry 219 (class 1259 OID 16663)
 -- Name: log; Type: TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -251,6 +325,7 @@ CREATE TABLE public.log (
 ALTER TABLE public.log OWNER TO avnadmin;
 
 --
+-- TOC entry 220 (class 1259 OID 16666)
 -- Name: player_stats; Type: TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -275,6 +350,7 @@ CREATE TABLE public.player_stats (
 ALTER TABLE public.player_stats OWNER TO avnadmin;
 
 --
+-- TOC entry 231 (class 1259 OID 16950)
 -- Name: players; Type: FOREIGN TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -330,6 +406,7 @@ ALTER FOREIGN TABLE public.players ALTER COLUMN deaths OPTIONS (
 ALTER FOREIGN TABLE public.players OWNER TO avnadmin;
 
 --
+-- TOC entry 232 (class 1259 OID 16953)
 -- Name: users; Type: FOREIGN TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -373,6 +450,7 @@ ALTER FOREIGN TABLE public.users ALTER COLUMN updated_at OPTIONS (
 ALTER FOREIGN TABLE public.users OWNER TO avnadmin;
 
 --
+-- TOC entry 233 (class 1259 OID 16956)
 -- Name: connected_demos; Type: MATERIALIZED VIEW; Schema: public; Owner: avnadmin
 --
 
@@ -403,19 +481,22 @@ CREATE MATERIALIZED VIEW public.connected_demos AS
 ALTER TABLE public.connected_demos OWNER TO avnadmin;
 
 --
+-- TOC entry 221 (class 1259 OID 16691)
 -- Name: player; Type: TABLE; Schema: public; Owner: avnadmin
 --
 
 CREATE TABLE public.player (
     id integer NOT NULL,
     steamid64 bigint NOT NULL,
-    team_id integer
+    team_id integer,
+    name character varying(255)
 );
 
 
 ALTER TABLE public.player OWNER TO avnadmin;
 
 --
+-- TOC entry 222 (class 1259 OID 16694)
 -- Name: player_id_seq; Type: SEQUENCE; Schema: public; Owner: avnadmin
 --
 
@@ -431,6 +512,8 @@ CREATE SEQUENCE public.player_id_seq
 ALTER TABLE public.player_id_seq OWNER TO avnadmin;
 
 --
+-- TOC entry 4483 (class 0 OID 0)
+-- Dependencies: 222
 -- Name: player_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: avnadmin
 --
 
@@ -438,6 +521,7 @@ ALTER SEQUENCE public.player_id_seq OWNED BY public.player.id;
 
 
 --
+-- TOC entry 223 (class 1259 OID 16695)
 -- Name: player_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: avnadmin
 --
 
@@ -453,6 +537,8 @@ CREATE SEQUENCE public.player_stats_id_seq
 ALTER TABLE public.player_stats_id_seq OWNER TO avnadmin;
 
 --
+-- TOC entry 4484 (class 0 OID 0)
+-- Dependencies: 223
 -- Name: player_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: avnadmin
 --
 
@@ -460,6 +546,7 @@ ALTER SEQUENCE public.player_stats_id_seq OWNED BY public.player_stats.id;
 
 
 --
+-- TOC entry 224 (class 1259 OID 16699)
 -- Name: team; Type: TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -472,6 +559,7 @@ CREATE TABLE public.team (
 ALTER TABLE public.team OWNER TO avnadmin;
 
 --
+-- TOC entry 225 (class 1259 OID 16702)
 -- Name: team_stats; Type: TABLE; Schema: public; Owner: avnadmin
 --
 
@@ -493,6 +581,7 @@ CREATE TABLE public.team_stats (
 ALTER TABLE public.team_stats OWNER TO avnadmin;
 
 --
+-- TOC entry 226 (class 1259 OID 16705)
 -- Name: team_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: avnadmin
 --
 
@@ -508,6 +597,8 @@ CREATE SEQUENCE public.team_stats_id_seq
 ALTER TABLE public.team_stats_id_seq OWNER TO avnadmin;
 
 --
+-- TOC entry 4485 (class 0 OID 0)
+-- Dependencies: 226
 -- Name: team_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: avnadmin
 --
 
@@ -515,6 +606,7 @@ ALTER SEQUENCE public.team_stats_id_seq OWNED BY public.team_stats.id;
 
 
 --
+-- TOC entry 4286 (class 2604 OID 16715)
 -- Name: bomb_attempt id; Type: DEFAULT; Schema: public; Owner: avnadmin
 --
 
@@ -522,6 +614,7 @@ ALTER TABLE ONLY public.bomb_attempt ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- TOC entry 4288 (class 2604 OID 16716)
 -- Name: player id; Type: DEFAULT; Schema: public; Owner: avnadmin
 --
 
@@ -529,6 +622,7 @@ ALTER TABLE ONLY public.player ALTER COLUMN id SET DEFAULT nextval('public.playe
 
 
 --
+-- TOC entry 4287 (class 2604 OID 16717)
 -- Name: player_stats id; Type: DEFAULT; Schema: public; Owner: avnadmin
 --
 
@@ -536,6 +630,7 @@ ALTER TABLE ONLY public.player_stats ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- TOC entry 4289 (class 2604 OID 16718)
 -- Name: team_stats id; Type: DEFAULT; Schema: public; Owner: avnadmin
 --
 
@@ -543,6 +638,7 @@ ALTER TABLE ONLY public.team_stats ALTER COLUMN id SET DEFAULT nextval('public.t
 
 
 --
+-- TOC entry 4291 (class 2606 OID 16720)
 -- Name: bomb_attempt bomb_attempt_pkey; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -551,6 +647,7 @@ ALTER TABLE ONLY public.bomb_attempt
 
 
 --
+-- TOC entry 4293 (class 2606 OID 16722)
 -- Name: log log_pkey; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -559,6 +656,7 @@ ALTER TABLE ONLY public.log
 
 
 --
+-- TOC entry 4297 (class 2606 OID 16724)
 -- Name: player player_pkey; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -567,6 +665,7 @@ ALTER TABLE ONLY public.player
 
 
 --
+-- TOC entry 4295 (class 2606 OID 16726)
 -- Name: player_stats player_stats_pkey; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -575,6 +674,7 @@ ALTER TABLE ONLY public.player_stats
 
 
 --
+-- TOC entry 4299 (class 2606 OID 16728)
 -- Name: player player_steamid64_key; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -583,6 +683,7 @@ ALTER TABLE ONLY public.player
 
 
 --
+-- TOC entry 4301 (class 2606 OID 16730)
 -- Name: team team_pkey; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -591,6 +692,7 @@ ALTER TABLE ONLY public.team
 
 
 --
+-- TOC entry 4305 (class 2606 OID 16732)
 -- Name: team_stats team_stats_pkey; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -599,6 +701,7 @@ ALTER TABLE ONLY public.team_stats
 
 
 --
+-- TOC entry 4303 (class 2606 OID 16734)
 -- Name: team team_team_name_key; Type: CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -607,6 +710,7 @@ ALTER TABLE ONLY public.team
 
 
 --
+-- TOC entry 4306 (class 2606 OID 16735)
 -- Name: bomb_attempt bomb_attempt_log_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -615,6 +719,7 @@ ALTER TABLE ONLY public.bomb_attempt
 
 
 --
+-- TOC entry 4307 (class 2606 OID 16740)
 -- Name: bomb_attempt bomb_attempt_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -623,6 +728,7 @@ ALTER TABLE ONLY public.bomb_attempt
 
 
 --
+-- TOC entry 4308 (class 2606 OID 16745)
 -- Name: player_stats player_stats_log_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -631,6 +737,7 @@ ALTER TABLE ONLY public.player_stats
 
 
 --
+-- TOC entry 4309 (class 2606 OID 16750)
 -- Name: player_stats player_stats_player_steamid64_fkey; Type: FK CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
@@ -639,12 +746,186 @@ ALTER TABLE ONLY public.player_stats
 
 
 --
+-- TOC entry 4310 (class 2606 OID 16755)
 -- Name: team_stats team_stats_log_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: avnadmin
 --
 
 ALTER TABLE ONLY public.team_stats
     ADD CONSTRAINT team_stats_log_id_fkey FOREIGN KEY (log_id) REFERENCES public.log(log_id);
 
+
+--
+-- TOC entry 4460 (class 0 OID 0)
+-- Dependencies: 7
+-- Name: SCHEMA aiven_extras; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA aiven_extras TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4463 (class 0 OID 0)
+-- Dependencies: 257
+-- Name: FUNCTION auto_explain_load(); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.auto_explain_load() TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4464 (class 0 OID 0)
+-- Dependencies: 265
+-- Name: FUNCTION claim_public_schema_ownership(); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.claim_public_schema_ownership() TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4465 (class 0 OID 0)
+-- Dependencies: 248
+-- Name: FUNCTION dblink_slot_create_or_drop(arg_connection_string text, arg_slot_name text, arg_action text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.dblink_slot_create_or_drop(arg_connection_string text, arg_slot_name text, arg_action text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4466 (class 0 OID 0)
+-- Dependencies: 254
+-- Name: FUNCTION pg_create_publication_for_all_tables(arg_publication_name text, arg_publish text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.pg_create_publication_for_all_tables(arg_publication_name text, arg_publish text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4467 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: FUNCTION pg_create_subscription(arg_subscription_name text, arg_connection_string text, arg_publication_name text, arg_slot_name text, arg_slot_create boolean, arg_copy_data boolean); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.pg_create_subscription(arg_subscription_name text, arg_connection_string text, arg_publication_name text, arg_slot_name text, arg_slot_create boolean, arg_copy_data boolean) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4468 (class 0 OID 0)
+-- Dependencies: 253
+-- Name: FUNCTION pg_drop_subscription(arg_subscription_name text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.pg_drop_subscription(arg_subscription_name text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4469 (class 0 OID 0)
+-- Dependencies: 255
+-- Name: FUNCTION pg_list_all_subscriptions(); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.pg_list_all_subscriptions() TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4470 (class 0 OID 0)
+-- Dependencies: 266
+-- Name: FUNCTION pg_stat_replication_list(); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.pg_stat_replication_list() TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4471 (class 0 OID 0)
+-- Dependencies: 256
+-- Name: FUNCTION session_replication_role(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.session_replication_role(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4472 (class 0 OID 0)
+-- Dependencies: 258
+-- Name: FUNCTION set_auto_explain_log_analyze(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_analyze(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4473 (class 0 OID 0)
+-- Dependencies: 262
+-- Name: FUNCTION set_auto_explain_log_buffers(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_buffers(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4474 (class 0 OID 0)
+-- Dependencies: 259
+-- Name: FUNCTION set_auto_explain_log_format(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_format(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4475 (class 0 OID 0)
+-- Dependencies: 260
+-- Name: FUNCTION set_auto_explain_log_min_duration(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_min_duration(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4476 (class 0 OID 0)
+-- Dependencies: 264
+-- Name: FUNCTION set_auto_explain_log_nested_statements(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_nested_statements(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4477 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: FUNCTION set_auto_explain_log_timing(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_timing(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4478 (class 0 OID 0)
+-- Dependencies: 263
+-- Name: FUNCTION set_auto_explain_log_verbose(arg_parameter text); Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION aiven_extras.set_auto_explain_log_verbose(arg_parameter text) TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4479 (class 0 OID 0)
+-- Dependencies: 2121
+-- Name: FOREIGN DATA WRAPPER postgres_fdw; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT ALL ON FOREIGN DATA WRAPPER postgres_fdw TO avnadmin WITH GRANT OPTION;
+
+
+--
+-- TOC entry 4481 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: TABLE pg_stat_replication; Type: ACL; Schema: aiven_extras; Owner: postgres
+--
+
+GRANT SELECT ON TABLE aiven_extras.pg_stat_replication TO avnadmin WITH GRANT OPTION;
+
+
+-- Completed on 2023-08-20 20:59:06
 
 --
 -- PostgreSQL database dump complete
