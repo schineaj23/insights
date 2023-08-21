@@ -22,6 +22,7 @@ pub struct Team {
 pub struct Player {
     #[serde(rename(deserialize = "currentTeams"))]
     pub current_teams: HashMap<String, Option<crate::rgl::Team>>,
+    pub name: String,
 }
 
 pub async fn search_player(player_id: &str) -> Result<Player, Box<dyn Error>> {
