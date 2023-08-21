@@ -80,14 +80,12 @@
 		const Plotly = (await import('plotly.js-dist')).default;
 		Plotly.react(plot, dpaData, { dpaLayout }, [1], config);
 	}
-
-	console.log(data.feedData);
 </script>
 
 <title>Jump Efficiency</title>
 <div class="container p-5 flex justify-center">
 	<article
-		class="prose lg:prose-xl prose-figure:rounded-xl prose-figure:shallow-md prose-figure:border"
+		class="prose lg:prose-xl prose-figure:max-w-lg prose-figure:rounded-xl prose-figure:shallow-md prose-figure:border"
 	>
 		<h1>Separating the Players from the Pretenders</h1>
 		<p>
@@ -158,9 +156,10 @@
 		</p>
 
 		<p>
-			...and the results seem to pass the eye-test as well. From the dataset of RGL season 12 Invite
-			scrims/matches including against Advanced players, {data.feedData.labels[0]} has the best damage
-			ratio (lowest feed factor) of all players at <b>{data.feedData.y[0].toFixed(3)}</b> dt/dmg.
+			...and the results seem to pass the eye-test as well. From the dataset of RGL Season 12 Invite
+			scrims/matches including against Advanced players, <b>{data.feedData.labels[0]}</b> has the
+			best damage ratio (lowest feed factor) of all players at
+			<b>{data.feedData.y[0].toFixed(3)}</b> dt/dmg.
 		</p>
 
 		<div class="flex justify-center">
@@ -173,6 +172,7 @@
 								color: data.feedData.y,
 								colorscale: 'Portland'
 							},
+							hoverinfo: 'y+text',
 							hovertext: data.feedData.labels,
 							y: data.feedData.y,
 							type: 'bar',
@@ -186,16 +186,15 @@
 			</figure>
 		</div>
 
-		<h3>The Final Stat</h3>
+		<h3>Final Thoughts</h3>
 		<p>
 			Talk about creating the final statistic, picking the treshold to use and if bomb attempts for
 			soldiers predicts or is correlated to the win percentage of the log
 		</p>
+		<p>
+			A limitation of these statistics are the dataset itself. The dataset was created by scanning
+			from logs.tf and matching a demo with the same players, map, and time. This may under
+			represent players which scrim in servers without demos.tf auto upload enabled.
+		</p>
 	</article>
 </div>
-
-<style>
-	:global(.plot-container) {
-		scale: 1;
-	}
-</style>
