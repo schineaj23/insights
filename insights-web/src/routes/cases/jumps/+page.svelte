@@ -78,7 +78,7 @@
 
 		// FIXME: Evil hack to force-update the plot
 		const Plotly = (await import('plotly.js-dist')).default;
-		Plotly.react(plot, dpaData, { dpaLayout }, [1], config);
+		Plotly.react(plot, dpaData, dpaLayout, [1], config);
 	}
 </script>
 
