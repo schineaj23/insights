@@ -3,50 +3,54 @@ import pl from 'nodejs-polars';
 import type { PageServerLoad } from '$lib/$types';
 
 export const load = (async ({ params }) => {
-	const names = await prisma.player.findMany();
-	const namesMap = new Map(names.map((i) => [i.steamid64, i.name]));
+	const bigQuery = await prisma.$queryRaw`
+    select
+      player_id,
+      player.name,
+      num_logs,
+      num_attempts,
+      attempts_per_log,
+      damage_per_attempt,
+	  damage_ratio
+    from
+    (
+      select
+        player_id,
+        count(distinct log_id) as "num_logs", count(log_id) as "num_attempts",
+        count(log_id)/count(distinct log_id)::float as "attempts_per_log",
+        sum(damage)/count(log_id)::float as "damage_per_attempt",
+		    sum(damage_taken)/sum(damage)::float as "damage_ratio"
+      from
+        bomb_attempt
+      group by
+        player_id
+    )
+    as
+      tab
+    left join
+      player
+    on
+      player.steamid64 = player_id
+    where
+      num_attempts > 50
+    order by
+      damage_ratio asc`;
 
-	const data = await prisma.bomb_attempt.findMany();
-	let df = pl.DataFrame(data);
+	let df = pl.DataFrame(bigQuery);
 
-	let grouped = df.groupBy('player_id');
-	let tabulation = grouped
-		.mean()
-		.select('player_id', 'damage')
-		.join(grouped.count(), { on: 'player_id' })
-		.sort('player_id')
-		.filter(pl.col('id_count').greaterThan(50));
-	// Minimum 50 attempts
-
-	let feedTabulation = grouped
-		.agg(pl.col('damage').sum(), pl.col('damage_taken').sum())
-		.select('player_id', pl.col('damage_taken').div(pl.col('damage')))
-		.join(grouped.count(), { on: 'player_id' })
-		.sort('damage_taken')
-		.filter(pl.col('id_count').greaterThan(50));
-	// Minimum 100 attempts, limit 50 so I can render all of them
-
-	const feedLabels = feedTabulation
-		.getColumn('player_id')
-		.toArray()
-		.map((id) => namesMap.get(id));
-	const feedRatio = feedTabulation.getColumn('damage_taken').toArray();
-
-	const playerIds = tabulation
-		.getColumn('player_id')
-		.toArray()
-		.map((id) => namesMap.get(id));
-	const attemptsByPlayer = tabulation.getColumn('id_count').toArray();
-	const averageDamageByPlayer = tabulation.getColumn('damage').toArray();
+	const playerNames = df.getColumn('name').toArray();
+	const averageDamageByPlayer = df.getColumn('damage_per_attempt').toArray();
+	const attemptsByPlayerPerLog = df.getColumn('attempts_per_log').toArray();
+	const feedRatio = df.getColumn('damage_ratio').toArray();
 
 	return {
 		dpaData: {
-			labels: playerIds,
+			labels: playerNames,
 			y: averageDamageByPlayer,
-			x: attemptsByPlayer
+			x: attemptsByPlayerPerLog
 		},
 		feedData: {
-			labels: feedLabels,
+			labels: playerNames,
 			y: feedRatio
 		}
 	};

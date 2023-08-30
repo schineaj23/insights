@@ -23,8 +23,8 @@
 	];
 
 	const dpaLayout = createLayout(
-		'Mean Bomb Damage vs Number of Attempts',
-		'Number of Attempts',
+		'Mean Bomb Damage vs Attempts per Game',
+		'Bomb Attempts per Game',
 		'Mean Bomb Damage'
 	);
 
@@ -65,7 +65,7 @@
 		};
 
 		req.players.forEach((p: Player) => {
-			dpa_x.push(p.damage_per_attempt);
+			dpa_x.push(p.attempts);
 			attempt_y.push(p.damage_per_attempt);
 			player_labels.push(p.name);
 		});
@@ -192,7 +192,7 @@
 			soldiers predicts or is correlated to the win percentage of the log
 		</p>
 		<p>
-			A limitation of these statistics are the dataset itself. The dataset was created by scanning
+			The major limitation of these statistics is the dataset. The dataset was created by scanning
 			from logs.tf and matching a demo with the same players, map, and time. This may under
 			represent players which scrim in servers without demos.tf auto upload enabled.
 		</p>
