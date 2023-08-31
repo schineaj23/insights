@@ -9,7 +9,7 @@ use serde_json::json;
 use steamid_ng::SteamID;
 use tf_demo_parser::{demo::Buffer, DemoParser, Stream};
 use tokio::time::Instant;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::cache::Item;
 
@@ -140,7 +140,11 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
             body: body.clone(),
         },
     )
-    .await?;
+    .await
+    .map_err(|err| {
+        warn!("Demo {demo_id}: Could not write to cache! Error: {err:?}");
+    })
+    .ok();
 
     let resp = Response::builder()
         .status(200)
