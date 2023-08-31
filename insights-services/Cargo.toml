@@ -29,6 +29,10 @@ path = "src/analyzer/process.rs"
 name = "migrate-names"
 path = "src/bin/migrate_names.rs"
 
+[[bin]]
+name = "teamporter"
+path = "src/bin/import_team.rs"
+
 [workspace]
 
 members = ["functions"]
