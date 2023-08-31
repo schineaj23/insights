@@ -2,7 +2,9 @@ name: Deploy Lambda Function
 on:
   push:
     paths:
-      - "./insights-services/functions/**"
+      - "./insights-services/functions/**.rs"
+      - "./insights-services/functions/**.toml"
+      - "./insights-services/functions/**.lock"
   workflow_dispatch:
 
 env:
@@ -13,9 +15,9 @@ jobs:
     name: Deploy Analyze Lambda Function
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
