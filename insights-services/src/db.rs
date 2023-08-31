@@ -50,7 +50,7 @@ pub async fn insert_player(
     steam_id: &i64,
     team_id: &i32,
 ) -> Result<(), Box<dyn Error>> {
-    sqlx::query("insert into player (steamid64, team_id) values ($1, $2) on conflict do nothing")
+    sqlx::query("insert into player (steamid64) values ($1, ARRAY[$2]) on conflict do nothing")
         .bind(&steam_id)
         .bind(&team_id)
         .execute(pool)
