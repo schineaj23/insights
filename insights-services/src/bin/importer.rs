@@ -57,7 +57,7 @@ async fn determine_team_ids_for_match(
     let mut last_blu_id = 0;
     let mut visited = 0;
     for (id, player) in player_map.iter() {
-        let id64 = SteamID::from_steam3(&id).unwrap().account_id().to_string();
+        let id64 = u64::from(SteamID::from_steam3(&id).unwrap()).to_string();
         let team_id = match fetch_team_id_for_player(id64).await {
             Some(id) => id,
             None => {
@@ -267,7 +267,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for (player_id, stats) in log.players.iter() {
             let start_time = Instant::now();
 
-            let player_id = SteamID::from_steam3(player_id)?.account_id() as i64;
+            let player_id = u64::from(SteamID::from_steam3(player_id)?);
 
             // If it is a ringer, just ignore we don't care. It would probably throw an error in DB anyways
             let team_id = match fetch_team_id_for_player(player_id.to_string()).await {
@@ -278,8 +278,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             };
 
-            db::insert_player(&pool, &player_id, &team_id).await?;
-            db::insert_player_stats(&pool, log_id, &player_id, stats).await?;
+            db::insert_player(&pool, &(player_id as i64), &team_id).await?;
+            db::insert_player_stats(&pool, log_id, &(player_id as i64), stats).await?;
 
             println!(
                 "Took {} seconds to insert player stats",

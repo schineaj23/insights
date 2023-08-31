@@ -26,7 +26,7 @@ struct DemosApiResponse {
 #[derive(Serialize)]
 struct PlayerSummary {
     name: String,
-    steamid: i64,
+    steamid: u64,
     attempts: i32,
     damage_per_attempt: f32,
 }
@@ -55,7 +55,7 @@ fn package_summary(results: AnalyzerResult) -> Vec<PlayerSummary> {
 
     for (uid, (cnt, dmg)) in bomb_map {
         let user = results.1.get(&uid.into()).unwrap();
-        let id = SteamID::from_steam3(&user.steam_id).unwrap().account_id() as i64;
+        let id = u64::from(SteamID::from_steam3(&user.steam_id).unwrap());
         players.push(PlayerSummary {
             name: user.name.clone(),
             steamid: id,

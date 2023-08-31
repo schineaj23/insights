@@ -47,7 +47,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     for (uid, (cnt, cnt_dmg, dmg)) in dmg {
-        let id = SteamID::from_steam3(&users.get(&uid.into()).unwrap().steam_id)?.account_id();
+        let id = u64::from(SteamID::from_steam3(
+            &users.get(&uid.into()).unwrap().steam_id,
+        )?);
         println!(
             "Uid: {:?}, NumBombs: {}, Dmg/Bomb: {:.2}, NonzeroDmgBombs: {} BombEff: {:.2}%",
             id,
