@@ -19,14 +19,16 @@ pub struct Team {
 
 pub struct Collector {
     log_id_cache: HashSet<i32>,
-    pub offset: i32,
+    pub start: i32,
+    pub end: Option<i32>,
 }
 
 impl Collector {
-    pub fn new(offset: i32) -> Self {
+    pub fn new(start: i32, end: Option<i32>) -> Self {
         Collector {
             log_id_cache: HashSet::new(),
-            offset: offset,
+            start: start,
+            end: end,
         }
     }
 
@@ -62,7 +64,11 @@ impl Collector {
                 return;
             }
 
-            if log.date >= self.offset {
+            if self.end.is_some() && log.date > self.end.unwrap() {
+                return;
+            }
+
+            if log.date >= self.start {
                 collected += self.log_id_cache.insert(log.id) as i32;
             }
         });

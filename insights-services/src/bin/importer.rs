@@ -99,7 +99,8 @@ struct Args {
     insert_into_db: bool,
     team_list_path: String,
     read_logs_path: Option<String>,
-    offset: i32,
+    start: i32,
+    end: Option<i32>,
 }
 
 fn get_config_dir() -> String {
@@ -112,12 +113,13 @@ fn get_config_dir() -> String {
 
 fn parse_args() -> Result<Args, pico_args::Error> {
     let help: &str =
-        "USAGE: importer -t | --team-list FILE [-fdi] [-o | --offset NUMBER] [-r | --read FILE]
+        "USAGE: importer -t | --team-list FILE [-fdi] [-s NUMBER] [-e NUMBER] [-r FILE]
         -t --team-list  Read teams and players from JSON file
         [-f --fetch]    Fetch new logs from logs.tf
         [-d --dump]     Dump fetched logs to file
         [-i --insert]   Insert collected logs into database
-        [-o --offset]   Minimum date of log in Unix timestamp, if none supplied use last run
+        [-s --start]    Minimum date of log in Unix timestamp, if none supplied use last run
+        [-e --end]      Maximum date of log in Unix timestamp, if none supplied use current time
         [-r --read]     Read log ids from file separated by newlines
     ";
     let mut args: Vec<_> = std::env::args_os().collect();
@@ -135,10 +137,10 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         std::process::exit(-1);
     }
 
-    let offset_args: Result<String, pico_args::Error> = env_args.value_from_str(["-o", "--offset"]);
+    let start_args: Result<String, pico_args::Error> = env_args.value_from_str(["-s", "--start"]);
 
-    let offset: Option<i32> = match offset_args {
-        Ok(offset_str) => offset_str.parse::<i32>().ok(),
+    let start: Option<i32> = match start_args {
+        Ok(start_str) => start_str.parse::<i32>().ok(),
         Err(e) => match e {
             pico_args::Error::MissingOption(_) => {
                 match std::fs::read_to_string(get_config_dir() + "/last_run") {
@@ -163,12 +165,13 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         team_list_path: env_args
             .value_from_str(["-t", "--team-list"])
             .unwrap_or_else(|_| std::env::var("TEAM_LIST_PATH").expect("TEAM_LIST_PATH not set")),
-        offset: offset.unwrap_or_else(|| {
+        start: start.unwrap_or_else(|| {
             println!("Error reading offset, using S12 registration deadline as fallback");
             // TODO: automate team/seasons
             // Mon May 15 2023 03:59:00 GMT+0000 (S12 Team Registration Deadline) = 1684123140
             1684123140
         }),
+        end: env_args.opt_value_from_str(["-e", "--end"])?,
         read_logs_path: env_args.opt_value_from_str(["-r", "--read"])?,
     };
 
@@ -197,13 +200,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: make the collecting and the adding on separate services so they don't block each other
     let log_collection_start = Instant::now();
 
-    let date_time = NaiveDateTime::from_timestamp_opt(args.offset as i64, 0).unwrap();
+    let start_date_time = NaiveDateTime::from_timestamp_opt(args.start as i64, 0).unwrap();
+    let mut end_date_str = String::from("present");
+    if let Some(end) = args.end {
+        let end_date_time = NaiveDateTime::from_timestamp_opt(end as i64, 0).unwrap();
+        end_date_str = end_date_time.format("%d/%m/%Y %H:%M").to_string();
+    }
     println!(
-        "Starting log collection from timestamp {}",
-        date_time.format("%d/%m/%Y %H:%M")
+        "Starting log collection from timestamp {} to {}",
+        start_date_time.format("%d/%m/%Y %H:%M"),
+        end_date_str
     );
 
-    let mut collector = Collector::new(args.offset);
+    let mut collector = Collector::new(args.start, args.end);
 
     if let Some(cache_path) = args.read_logs_path {
         println!(
@@ -249,7 +258,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let log: LogSerialized = fetch_log(log_id).await?;
 
         // Why do we bother processing if it is past our offset anyways
-        if log.info.date < collector.offset {
+        if log.info.date < collector.start {
             println!("Log {} too old. Skipping...", log_id);
             continue;
         }
