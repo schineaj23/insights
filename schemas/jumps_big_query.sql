@@ -26,4 +26,6 @@ select
     on
       player.steamid64 = player_id
 	where
-	  num_attempts > 50;
+	  num_attempts > 50
+	order by
+	  damage_ratio asc;
