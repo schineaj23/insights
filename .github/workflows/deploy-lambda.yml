@@ -1,7 +1,8 @@
 name: Deploy Lambda Function
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
     paths:
       - "./insights-services/functions/**"
   workflow_dispatch:
