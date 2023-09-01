@@ -18,14 +18,6 @@ name = "stats"
 path = "src/bin/stats.rs"
 
 [[bin]]
-name = "analyzer"
-path = "src/analyzer/main.rs"
-
-[[bin]]
-name = "process"
-path = "src/analyzer/process.rs"
-
-[[bin]]
 name = "migrate-names"
 path = "src/bin/migrate_names.rs"
 
@@ -35,7 +27,7 @@ path = "src/bin/import_team.rs"
 
 [workspace]
 
-members = ["functions"]
+members = ["analyzer", "analyzer/lambda-analyze-demo"]
 
 
 [dependencies]
@@ -46,11 +38,11 @@ reqwest = { version = "0.11.18", default-features = false, features = [
 tokio = { version = "1.28.2", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-itertools = "0.10.5"
+itertools = "0.11.0"
 chrono = "0.4.26"
 regex = "1.8.4"
 cached = "0.44.0"
-sqlx = { version = "0.6.3", features = [
+sqlx = { version = "0.7.1", features = [
     "postgres",
     "runtime-tokio-rustls",
     "macros",

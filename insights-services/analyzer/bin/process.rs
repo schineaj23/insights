@@ -1,14 +1,15 @@
+use std::sync::Arc;
+
 use futures::StreamExt;
 use insights::db::{self, ConnectedDemo};
-use sqlx::{pool::PoolConnection, postgres::PgPoolOptions, Pool, Postgres};
-use std::sync::Arc;
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use steamid_ng::SteamID;
 use tf_demo_parser::{
     demo::{parser::gamestateanalyser::UserId, Buffer},
     DemoParser, Stream,
 };
 
-use insights::analyzer::analyzer::{AnalyzerResult, BombAttempt, BombAttemptAnalyzer, BombState};
+use analyzer::analyzer::{AnalyzerResult, BombAttemptAnalyzer};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,8 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let id3 = &users.get(&UserId::from(attempt.user)).unwrap().steam_id;
                 let id = SteamID::from_steam3(id3).unwrap().account_id() as i64;
 
-                let mut a = pool.acquire().await.unwrap();
-                match insert_bomb_attempt(&mut a, attempt, id, demo.log_id).await {
+                match analyzer::insert_bomb_attempt(&pool, attempt, id, demo.log_id).await {
                     Err(e) => {
                         eprintln!(
                             "[Demo: {}, Attempt: {}] insert_bomb_attempt: {:?}",
@@ -60,29 +60,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|x| x)
         .collect::<Vec<_>>();
     jobs.await;
-
-    Ok(())
-}
-
-async fn insert_bomb_attempt(
-    pool: &mut PoolConnection<Postgres>,
-    attempt: &BombAttempt,
-    player_id: i64,
-    log_id: i32,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let died = attempt.state == BombState::Died;
-    let start_tick = u32::from(attempt.start_tick) as i32;
-    let end_tick = u32::from(attempt.land_tick.unwrap_or_default()) as i32;
-
-    sqlx::query::<sqlx::Postgres>("insert into bomb_attempt (player_id, log_id, damage, damage_taken, start_tick, end_tick, died) values ($1, $2, $3, $4, $5, $6, $7)")
-    .bind(&player_id)
-    .bind(&log_id)
-    .bind(attempt.damage as i32)
-    .bind(attempt.damage_taken as i32)
-    .bind(&start_tick)
-    .bind(&end_tick)
-    .bind(&died)
-    .execute(pool).await?;
 
     Ok(())
 }

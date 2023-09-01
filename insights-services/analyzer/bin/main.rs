@@ -1,9 +1,8 @@
-use insights::analyzer::analyzer::{BombAttempt, BombAttemptAnalyzer};
+use analyzer::analyzer::BombAttempt;
 use log::debug;
 use pico_args::Arguments;
 use std::{collections::HashMap, fs, time::Instant};
 use steamid_ng::SteamID;
-use tf_demo_parser::{Demo, DemoParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = Arguments::from_env();
@@ -16,20 +15,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let file = fs::read(demo)?;
-    let demo = Demo::new(&file);
-
     let start = Instant::now();
 
-    let parser = DemoParser::new_with_analyser(demo.get_stream(), BombAttemptAnalyzer::new());
-    let (_header, (bomb_attempts, users)) = parser.parse()?;
+    let (bomb_attempts, users) = analyzer::analyze(file)?;
 
     let t = start.elapsed().as_secs_f32();
 
     debug!("All attempts: {:?}", bomb_attempts);
 
-    let bomb_dmg: Vec<&BombAttempt> = bomb_attempts
+    let bomb_dmg: Vec<BombAttempt> = bomb_attempts
         .iter()
         .filter(|attempt| attempt.damage > 0)
+        .cloned()
         .collect();
 
     let mut dmg: HashMap<u16, (i32, i32, u32)> = HashMap::new();

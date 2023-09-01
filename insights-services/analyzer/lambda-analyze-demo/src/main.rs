@@ -1,13 +1,8 @@
 mod cache;
 
-use std::collections::HashMap;
-
-use insights::analyzer::analyzer::{AnalyzerResult, BombAttemptAnalyzer};
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
-use steamid_ng::SteamID;
-use tf_demo_parser::{demo::Buffer, DemoParser, Stream};
 use tokio::time::Instant;
 use tracing::{info, warn};
 
@@ -21,50 +16,6 @@ use crate::cache::Item;
 #[derive(Deserialize)]
 struct DemosApiResponse {
     url: String,
-}
-
-#[derive(Serialize)]
-struct PlayerSummary {
-    name: String,
-    steamid: u64,
-    attempts: i32,
-    damage_per_attempt: f32,
-}
-
-fn analyze_demo(demo_bytes: Vec<u8>) -> Result<AnalyzerResult, Error> {
-    let demo_stream = Stream::new(Buffer::from(demo_bytes));
-    let (_, (attempts, users)) =
-        DemoParser::new_with_analyser(demo_stream, BombAttemptAnalyzer::new()).parse()?;
-    Ok((attempts, users))
-}
-
-fn package_summary(results: AnalyzerResult) -> Vec<PlayerSummary> {
-    let mut bomb_map: HashMap<u16, (i32, i32)> = HashMap::new();
-
-    for attempt in results.0 {
-        bomb_map
-            .entry(attempt.user)
-            .and_modify(|u| {
-                u.0 += 1;
-                u.1 += attempt.damage as i32;
-            })
-            .or_insert((1, attempt.damage as i32));
-    }
-
-    let mut players: Vec<PlayerSummary> = Vec::new();
-
-    for (uid, (cnt, dmg)) in bomb_map {
-        let user = results.1.get(&uid.into()).unwrap();
-        let id = u64::from(SteamID::from_steam3(&user.steam_id).unwrap());
-        players.push(PlayerSummary {
-            name: user.name.clone(),
-            steamid: id,
-            attempts: cnt,
-            damage_per_attempt: dmg as f32 / cnt as f32,
-        })
-    }
-
-    players
 }
 
 async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
@@ -115,7 +66,7 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
 
     let before = Instant::now();
     let demo_bytes: Vec<u8> = resp.bytes().await.unwrap().into();
-    let results = analyze_demo(demo_bytes)?;
+    let results = analyzer::analyze(demo_bytes).or(Err("Failed parse demo"))?;
 
     info!(
         "Demo {demo_id}: Finished Analysis in {:.2?}",
@@ -123,7 +74,7 @@ async fn bomb_handler(event: Request) -> Result<Response<Body>, Error> {
     );
 
     let before = Instant::now();
-    let players = package_summary(results);
+    let players = analyzer::package_summary(results);
 
     info!(
         "Demo {demo_id}: Packaging finished in {:.2?}",

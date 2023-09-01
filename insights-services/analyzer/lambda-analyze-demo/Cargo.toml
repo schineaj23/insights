@@ -1,5 +1,5 @@
 [package]
-name = "functions"
+name = "analyze-demo"
 version = "0.1.0"
 edition = "2021"
 
@@ -27,7 +27,8 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
     "fmt",
 ] }
-insights-services = { path = "../" }
+insights-services = { path = "../../" }
+analyzer = { path = "../" }
 tf-demo-parser = { git = "https://github.com/demostf/parser.git" }
 serde = "1.0.183"
 serde_json = "1.0.104"

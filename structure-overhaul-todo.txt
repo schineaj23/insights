@@ -1,0 +1,25 @@
+individual projects
+
+analyzer project:
+	- the bombattemptanalyzer (lib)
+	- perhaps put the repetitive operations into its own sort of library thing
+	- analyze-demo endpoint (bin)
+		- todo: make analyze-demo that also inserts into the db
+	- analyzer binary (bin)
+	- processor binary (bin)
+
+importer project:
+	- importer *the one for getting all the logs per team* (bin)
+		- todo: lambda function dispatch instead of doing things after
+	- team importer *adds players to team given a season* (bin)
+		- todo: trigger this on lambda function, maybe add a lib file then
+	- collector (lib of importer)
+
+libinsights/insights library crate
+	- db actions
+	- rgl api
+	- logs api
+
+generator:
+	- add the generator JSON files as dynamodb entries since idk where else to put them
+	- i guess i could save them in the github itself or on a computer?

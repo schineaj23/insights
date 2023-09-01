@@ -2,9 +2,7 @@ name: Deploy Lambda Function
 on:
   push:
     paths:
-      - "./insights-services/functions/**.rs"
-      - "./insights-services/functions/**.toml"
-      - "./insights-services/functions/**.lock"
+      - "./insights-services/analyzer/**"
   workflow_dispatch:
 
 env:
@@ -29,8 +27,8 @@ jobs:
       - name: Install cargo-lambda
         run: pip3 install cargo-lambda
       - name: Build Lambda Function
-        working-directory: ./insights-services/functions
+        working-directory: ./insights-services/analyzer/lambda-analyze-demo
         run: cargo lambda build --release --arm64 --output-format zip
       - name: Deploy Lambda Function
         working-directory: ./insights-services
-        run: aws lambda update-function-code --function-name analyze-demo --zip-file fileb://./target/lambda/functions/bootstrap.zip
+        run: aws lambda update-function-code --function-name analyze-demo --zip-file fileb://./target/lambda/bootstrap.zip

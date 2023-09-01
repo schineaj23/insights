@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use sqlx::FromRow;
+use sqlx::{FromRow, Postgres};
 
 use crate::log::{LogSerialized, PlayerStats};
 
@@ -97,8 +97,8 @@ pub struct ConnectedDemo {
 
 pub async fn get_connected_demos(
     pool: &sqlx::PgPool,
-) -> Result<Vec<ConnectedDemo>, Box<dyn std::error::Error>> {
-    let demos = sqlx::query_as::<sqlx::Postgres, ConnectedDemo>(
+) -> Result<Vec<ConnectedDemo>, Box<dyn Error>> {
+    let demos = sqlx::query_as::<Postgres, ConnectedDemo>(
         "select name, url, log_id, id, map from connected_demos",
     )
     .fetch_all(pool)
