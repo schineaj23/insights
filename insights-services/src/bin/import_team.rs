@@ -37,17 +37,16 @@ fn parse_args() -> Args {
     }
 }
 
+// Creates teams in the database if they do not exist already.
+// Give this a file with the teams and players, and a season id
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
 
+    let args = parse_args();
+
     let url = dotenv::var("LOG_DATABASE_URL").expect("LOG_DATABASE_URL not set");
     let pool = sqlx::PgPool::connect(&url).await?;
-    println!("got db conn");
-
-    // Creates teams in the database if they do not exist already.
-    // Give this a file with the teams and players, and a season id
-    let args = parse_args();
 
     let file = File::open(args.team_list)?;
     let reader = BufReader::new(file);
@@ -55,24 +54,41 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // First create all the teams
     for (team_name, team) in team_map {
-        sqlx::query::<Postgres>("insert into team (team_id, team_name, season) values ($1, $2, $3) on conflict do nothing")
+        let res = sqlx::query::<Postgres>("insert into team (team_id, team_name, season) values ($1, $2, $3) on conflict do nothing")
         .bind(&team.id)
         .bind(&team_name)
         .bind(&args.season)
         .execute(&pool).await?;
-        println!("+({}, {}, Season: {})", team.id, team_name, args.season);
+
+        let mut chr = "=";
+        if res.rows_affected() > 0 {
+            chr = "+";
+        }
+
+        println!(
+            "{}({}, {}, Season: {})",
+            chr, team.id, team_name, args.season
+        );
 
         // Then add the team id to each player's teams array
         for (name, id) in team.players {
-            let a = sqlx::query::<Postgres>(
-                "update player set teams = array_append(teams, $1) where steamid64 = $2",
+            let steam_id = id.parse::<i64>()?;
+
+            let res = sqlx::query::<Postgres>(
+                "insert into player (steamid64, name, teams) values ($1, $2, ARRAY[$3]) on conflict (steamid64) do update set teams = array_append(player.teams, $3) where player.steamid64 = $1 and not (ARRAY[$3] <@ player.teams)",
             )
+            .bind(&steam_id)
+            .bind(&name)
             .bind(&team.id)
-            .bind(&id)
             .execute(&pool)
             .await?;
-            println!("{a:?}");
-            println!("+({}, {}, Player: {})", team.id, team_name, name);
+
+            let mut chr = "=";
+            if res.rows_affected() > 0 {
+                chr = "+";
+            }
+
+            println!("{}({}, {}, Player: {})", chr, team.id, team_name, name);
         }
     }
 

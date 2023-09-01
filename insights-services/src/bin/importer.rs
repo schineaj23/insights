@@ -16,13 +16,18 @@ use steamid_ng::SteamID;
 use tokio::time::Instant;
 
 #[cached(size = 200, option)]
-async fn fetch_team_id_for_player(player_id: String) -> Option<i32> {
+async fn fetch_team_id_for_player(player_id: String, past: bool) -> Option<i32> {
     match get_team_id_from_player_lut(&player_id) {
         Some(team_id) => {
             println!("Found team_id from LUT");
             Some(team_id)
         }
         None => {
+            if past {
+                println!("Not querying RGL API since we are in past. Assuming ringer.");
+                return None;
+            }
+
             println!(
                 "Could not find team_id from LUT, asking RGL API for player {}",
                 player_id
@@ -49,6 +54,7 @@ fn get_team_id_from_player_lut(player_id: &str) -> Option<i32> {
 
 async fn determine_team_ids_for_match(
     player_map: &HashMap<String, PlayerStats>,
+    past: bool,
 ) -> Result<(i32, i32), Box<dyn std::error::Error>> {
     println!("determine_team_ids_for_match called");
     // Separate teams
@@ -58,7 +64,7 @@ async fn determine_team_ids_for_match(
     let mut visited = 0;
     for (id, player) in player_map.iter() {
         let id64 = u64::from(SteamID::from_steam3(&id).unwrap()).to_string();
-        let team_id = match fetch_team_id_for_player(id64).await {
+        let team_id = match fetch_team_id_for_player(id64, past).await {
             Some(id) => id,
             None => {
                 println!(
@@ -247,7 +253,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let log_insert_start = Instant::now();
 
-    let url = std::env::var("LOG_DATABASE_URL").expect("DATABASE_URL not set");
+    let url = std::env::var("LOG_DATABASE_URL").expect("LOG_DATABASE_URL not set");
     let pool = sqlx::PgPool::connect(&url).await?;
 
     for log_id in logs_cache.iter() {
@@ -268,7 +274,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             start_time.elapsed().as_secs_f32()
         );
 
-        let (red_team_id, blu_team_id) = determine_team_ids_for_match(&log.players).await?;
+        let (red_team_id, blu_team_id) =
+            determine_team_ids_for_match(&log.players, args.end.is_some()).await?;
 
         db::insert_log(&pool, &log_id, &(red_team_id, blu_team_id), &log).await?;
         println!("Added log {} to db", log_id);
@@ -279,13 +286,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let player_id = u64::from(SteamID::from_steam3(player_id)?);
 
             // If it is a ringer, just ignore we don't care. It would probably throw an error in DB anyways
-            let team_id = match fetch_team_id_for_player(player_id.to_string()).await {
-                Some(id) => id,
-                None => {
-                    println!("Skipping ringer {}", player_id);
-                    continue;
-                }
-            };
+            let team_id =
+                match fetch_team_id_for_player(player_id.to_string(), args.end.is_some()).await {
+                    Some(id) => id,
+                    None => {
+                        println!("Skipping ringer {}", player_id);
+                        continue;
+                    }
+                };
 
             db::insert_player(&pool, &(player_id as i64), &team_id).await?;
             db::insert_player_stats(&pool, log_id, &(player_id as i64), stats).await?;
