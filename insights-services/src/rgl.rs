@@ -21,7 +21,7 @@ pub struct Team {
 #[derive(Debug, Deserialize)]
 pub struct Player {
     #[serde(rename(deserialize = "currentTeams"))]
-    pub current_teams: HashMap<String, Option<crate::rgl::Team>>,
+    pub current_teams: HashMap<String, Option<Team>>,
     pub name: String,
 }
 
