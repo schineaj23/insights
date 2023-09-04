@@ -1,102 +1,75 @@
-use cached::proc_macro::cached;
+use async_trait::async_trait;
 use chrono::DateTime;
 use chrono::NaiveDateTime;
 use chrono::Utc;
 use dotenv::dotenv;
+use importer::Importer;
+use importer::PlayerCache;
 use insights::collect;
 use insights::collect::Collector;
-use insights::db;
-use insights::log::fetch_log;
 use insights::log::LogSerialized;
-use insights::log::PlayerStats;
-use insights::rgl;
+use log::debug;
 use pico_args::Arguments;
+use std::error::Error;
 use std::{collections::HashMap, fs::File, io::BufReader};
-use steamid_ng::SteamID;
 use tokio::time::Instant;
 
-#[cached(size = 200, option)]
-async fn fetch_team_id_for_player(player_id: String, past: bool) -> Option<i32> {
-    match get_team_id_from_player_lut(&player_id) {
-        Some(team_id) => {
+struct LocalCache {
+    given_players: Option<HashMap<String, i32>>,
+    all_players: HashMap<String, Option<i32>>,
+}
+
+impl LocalCache {
+    pub fn new() -> Self {
+        Self {
+            given_players: None,
+            all_players: HashMap::new(),
+        }
+    }
+
+    pub fn load_player_lut(&mut self, path: &str) -> Result<(), Box<dyn Error>> {
+        let file = File::open(path)?;
+        let reader: BufReader<File> = BufReader::new(file);
+        let map: HashMap<String, i32> = serde_json::from_reader(reader)?;
+        self.given_players = Some(map);
+        Ok(())
+    }
+
+    fn get_team_id_from_list(&self, player_id: &str) -> Option<i32> {
+        match &self.given_players {
+            Some(player_map) => player_map.get(player_id).cloned(),
+            None => None,
+        }
+    }
+}
+
+#[async_trait]
+impl PlayerCache for LocalCache {
+    async fn fetch_team_id_for_player(&mut self, id: &str) -> Option<i32> {
+        if self.all_players.contains_key(id) {
+            return *self.all_players.get(id).unwrap();
+        }
+
+        let id_opt = self.get_team_id_from_list(id).and_then(|team_id| {
             println!("Found team_id from LUT");
             Some(team_id)
-        }
-        None => {
-            if past {
-                println!("Not querying RGL API since we are in past. Assuming ringer.");
-                return None;
-            }
+        });
 
-            println!(
-                "Could not find team_id from LUT, asking RGL API for player {}",
-                player_id
-            );
-            let player = rgl::search_player(&player_id).await.unwrap();
-            let team = player.current_teams.get("sixes")?;
-
-            match team {
-                Some(team) => Some(team.id),
-                _ => None,
-            }
-        }
-    }
-}
-
-fn get_team_id_from_player_lut(player_id: &str) -> Option<i32> {
-    // TODO: cache this entire file in memory instead of reopening
-    let file = File::open("/home/cat/src/insighttf/player_teamid_lut.json").ok()?;
-    let reader: BufReader<File> = BufReader::new(file);
-    let id_map: HashMap<String, i32> = serde_json::from_reader(reader).ok()?;
-
-    id_map.get(player_id).map(|x| *x)
-}
-
-async fn determine_team_ids_for_match(
-    player_map: &HashMap<String, PlayerStats>,
-    past: bool,
-) -> Result<(i32, i32), Box<dyn std::error::Error>> {
-    println!("determine_team_ids_for_match called");
-    // Separate teams
-
-    let mut last_red_id = 0;
-    let mut last_blu_id = 0;
-    let mut visited = 0;
-    for (id, player) in player_map.iter() {
-        let id64 = u64::from(SteamID::from_steam3(&id).unwrap()).to_string();
-        let team_id = match fetch_team_id_for_player(id64, past).await {
-            Some(id) => id,
+        let id_opt = match id_opt {
+            Some(x) => Some(x),
             None => {
-                println!(
-                    "Could not find team id for player {} (are they not rostered?)",
-                    id
-                );
-                continue;
+                println!("Couldn't find team_id from LUT, querying RGL for {}", id);
+                self.fallback(id).await
             }
         };
+        self.all_players.insert(id.to_string(), id_opt);
 
-        if last_red_id == team_id || last_blu_id == team_id {
-            visited += 1;
-        }
-
-        match player.team.as_str() {
-            "Red" => {
-                last_red_id = team_id;
-            }
-            "Blue" => {
-                last_blu_id = team_id;
-            }
-            _ => {}
-        };
-
-        if visited >= 4 {
-            break;
-        }
+        id_opt
     }
 
-    println!("Found Red: {} Blue: {}", last_red_id, last_blu_id);
-
-    Ok((last_red_id, last_blu_id))
+    async fn fetch_team_id_for_past_player(&self, id: &str) -> Option<i32> {
+        self.get_team_id_from_list(id)
+    }
 }
 
 struct Args {
@@ -105,6 +78,7 @@ struct Args {
     insert_into_db: bool,
     team_list_path: String,
     read_logs_path: Option<String>,
+    player_lut_path: Option<String>,
     start: i32,
     end: Option<i32>,
 }
@@ -119,8 +93,9 @@ fn get_config_dir() -> String {
 
 fn parse_args() -> Result<Args, pico_args::Error> {
     let help: &str =
-        "USAGE: importer -t | --team-list FILE [-fdi] [-s NUMBER] [-e NUMBER] [-r FILE]
+        "USAGE: importer -t | --team-list FILE [-l FILE] [-fdi] [-s NUMBER] [-e NUMBER] [-r FILE]
         -t --team-list  Read teams and players from JSON file
+        [-l --list]     Key-value JSON file for players' team IDs.
         [-f --fetch]    Fetch new logs from logs.tf
         [-d --dump]     Dump fetched logs to file
         [-i --insert]   Insert collected logs into database
@@ -171,6 +146,7 @@ fn parse_args() -> Result<Args, pico_args::Error> {
         team_list_path: env_args
             .value_from_str(["-t", "--team-list"])
             .unwrap_or_else(|_| std::env::var("TEAM_LIST_PATH").expect("TEAM_LIST_PATH not set")),
+        player_lut_path: env_args.opt_value_from_str(["-l", "--list"])?,
         start: start.unwrap_or_else(|| {
             println!("Error reading offset, using S12 registration deadline as fallback");
             // TODO: automate team/seasons
@@ -197,11 +173,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let team_map: HashMap<String, collect::Team> = serde_json::from_reader(reader)?;
     println!("{:#?}", team_map.keys());
-
-    // Inserting teams
-    // for (team_name, team_data) in team_map.iter() {
-    //     db::insert_team(&pool, &team_name, &team_data.id).await?;
-    // }
 
     // TODO: make the collecting and the adding on separate services so they don't block each other
     let log_collection_start = Instant::now();
@@ -256,53 +227,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = std::env::var("LOG_DATABASE_URL").expect("LOG_DATABASE_URL not set");
     let pool = sqlx::PgPool::connect(&url).await?;
 
-    for log_id in logs_cache.iter() {
-        println!("Making request to logs.tf");
+    let mut cache = LocalCache::new();
 
+    if let Some(lut_path) = args.player_lut_path {
+        cache.load_player_lut(&lut_path)?;
+        println!("Is past season? {}", args.end.is_some());
+    }
+
+    let mut importer = Importer::new(&pool, cache, args.end.is_some());
+
+    for log_id in logs_cache.iter() {
         let start_time = Instant::now();
 
-        let log: LogSerialized = fetch_log(log_id).await?;
+        let log: LogSerialized = match insights::log::fetch_log(&log_id).await {
+            Ok(log) => log,
+            Err(x) => {
+                eprintln!("Log: {}, Error: {:?}", log_id, x);
+                continue;
+            }
+        };
+
+        debug!(
+            "Request recieved from logs.tf in {} seconds",
+            start_time.elapsed().as_secs_f32()
+        );
 
         // Why do we bother processing if it is past our offset anyways
+        // Covering the case where a log is in the file but past the desired start time
         if log.info.date < collector.start {
             println!("Log {} too old. Skipping...", log_id);
             continue;
         }
 
-        println!(
-            "Request recieved from logs.tf in {} seconds",
-            start_time.elapsed().as_secs_f32()
-        );
-
-        let (red_team_id, blu_team_id) =
-            determine_team_ids_for_match(&log.players, args.end.is_some()).await?;
-
-        db::insert_log(&pool, &log_id, &(red_team_id, blu_team_id), &log).await?;
-        println!("Added log {} to db", log_id);
-
-        for (player_id, stats) in log.players.iter() {
-            let start_time = Instant::now();
-
-            let player_id = u64::from(SteamID::from_steam3(player_id)?);
-
-            // If it is a ringer, just ignore we don't care. It would probably throw an error in DB anyways
-            let team_id =
-                match fetch_team_id_for_player(player_id.to_string(), args.end.is_some()).await {
-                    Some(id) => id,
-                    None => {
-                        println!("Skipping ringer {}", player_id);
-                        continue;
-                    }
-                };
-
-            db::insert_player(&pool, &(player_id as i64), &team_id).await?;
-            db::insert_player_stats(&pool, log_id, &(player_id as i64), stats).await?;
-
-            println!(
-                "Took {} seconds to insert player stats",
-                start_time.elapsed().as_secs_f32()
-            );
-        }
+        importer.import_log(*log_id, &log).await?;
     }
 
     println!("Likely scrim log count: {}", logs_cache.len());
