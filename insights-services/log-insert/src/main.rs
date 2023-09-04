@@ -21,8 +21,8 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
     let mut importer = Importer::new(&pool, cache, true);
 
     let records = event.payload.records;
-    for record in records.iter() {
-        info!("Processing record: {:?}", record);
+    for (i, record) in records.iter().enumerate() {
+        info!("Processing record {}: {:?}", i, record);
         let body = record.body.as_ref().unwrap();
 
         let log_id = body.parse::<i32>()?;
