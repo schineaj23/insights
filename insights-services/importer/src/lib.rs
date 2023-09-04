@@ -1,4 +1,3 @@
-use ::log::debug;
 use async_trait::async_trait;
 
 use insights::{
@@ -9,6 +8,7 @@ use insights::{
 use sqlx::PgPool;
 use std::{collections::HashMap, error::Error, time::Instant};
 use steamid_ng::SteamID;
+use tracing::{info, warn};
 
 #[async_trait]
 pub trait PlayerCache {
@@ -54,14 +54,14 @@ impl<'a, C: PlayerCache> Importer<'a, C> {
             true => match self.cache.fetch_team_id_for_past_player(&id).await {
                 Some(id) => Some(id),
                 None => {
-                    println!("Couldn't find team id for player {}", id);
+                    warn!("Couldn't find team id for player {}", id);
                     None
                 }
             },
             false => match self.cache.fetch_team_id_for_player(&id).await {
                 Some(id) => Some(id),
                 None => {
-                    println!("Couldn't find team id for player {} (PAST)", id);
+                    warn!("Couldn't find team id for player {} (PAST)", id);
                     None
                 }
             },
@@ -73,14 +73,13 @@ impl<'a, C: PlayerCache> Importer<'a, C> {
         log_id: i32,
         log: &LogSerialized,
     ) -> Result<(), Box<dyn Error>> {
-        println!("Inserting Log {}", log_id);
+        info!("Log {}: Start", log_id);
         let (red_team_id, blu_team_id) = self.determine_team_ids_for_match(&log.players).await?;
 
         db::insert_log(self.pool, &log_id, &(red_team_id, blu_team_id), &log).await?;
-        println!("Added log {} to db", log_id);
+        info!("Log {}: Added to DB", log_id);
 
         for (player_id, stats) in log.players.iter() {
-            #[cfg(debug_assertions)]
             let start_time = Instant::now();
 
             let player_id = u64::from(SteamID::from_steam3(player_id)?);
@@ -90,20 +89,23 @@ impl<'a, C: PlayerCache> Importer<'a, C> {
             let team_id = match self.get_player_team_id(&player_id.to_string()).await {
                 Some(id) => id,
                 None => {
-                    println!("Skipping ringer {}", player_id);
+                    info!("Log {}: Skipping ringer {}", log_id, player_id);
                     continue;
                 }
             };
 
-            let a = db::insert_player(self.pool, &(player_id as i64), &team_id).await?;
-            if a == 0 {
-                println!("player {} was skipped for insert", player_id);
+            if db::insert_player(self.pool, &(player_id as i64), &team_id).await? == 0 {
+                info!(
+                    "Log {}: Player {} was skipped for insert",
+                    log_id, player_id
+                );
             }
+
             db::insert_player_stats(self.pool, &log_id, &(player_id as i64), stats).await?;
 
-            #[cfg(debug_assertions)]
-            debug!(
-                "Took {} seconds to insert player stats",
+            info!(
+                "Log {}: Took {} seconds to insert player stats",
+                log_id,
                 start_time.elapsed().as_secs_f32()
             );
         }
@@ -114,9 +116,7 @@ impl<'a, C: PlayerCache> Importer<'a, C> {
         &mut self,
         player_map: &HashMap<String, PlayerStats>,
     ) -> Result<(i32, i32), Box<dyn std::error::Error>> {
-        println!("determine_team_ids_for_match called");
         // Separate teams
-
         let mut last_red_id = 0;
         let mut last_blu_id = 0;
         let mut visited = 0;
@@ -147,7 +147,7 @@ impl<'a, C: PlayerCache> Importer<'a, C> {
             }
         }
 
-        println!("Found Red: {} Blue: {}", last_red_id, last_blu_id);
+        info!("Found Red: {} Blue: {}", last_red_id, last_blu_id);
 
         Ok((last_red_id, last_blu_id))
     }

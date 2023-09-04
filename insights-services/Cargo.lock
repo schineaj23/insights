@@ -1341,7 +1341,6 @@ dependencies = [
  "home",
  "insights-services",
  "itertools 0.11.0",
- "log",
  "pico-args",
  "regex",
  "reqwest",
@@ -1350,6 +1349,7 @@ dependencies = [
  "sqlx",
  "steamid-ng",
  "tokio",
+ "tracing",
 ]
 
 [[package]]

@@ -8,11 +8,12 @@ use importer::PlayerCache;
 use insights::collect;
 use insights::collect::Collector;
 use insights::log::LogSerialized;
-use log::debug;
 use pico_args::Arguments;
 use std::error::Error;
 use std::{collections::HashMap, fs::File, io::BufReader};
 use tokio::time::Instant;
+use tracing::info;
+use tracing::warn;
 
 struct LocalCache {
     given_players: Option<HashMap<String, i32>>,
@@ -51,14 +52,14 @@ impl PlayerCache for LocalCache {
         }
 
         let id_opt = self.get_team_id_from_list(id).and_then(|team_id| {
-            println!("Found team_id from LUT");
+            info!("Found team_id from LUT");
             Some(team_id)
         });
 
         let id_opt = match id_opt {
             Some(x) => Some(x),
             None => {
-                println!("Couldn't find team_id from LUT, querying RGL for {}", id);
+                info!("Couldn't find team_id from LUT, querying RGL for {}", id);
                 self.fallback(id).await
             }
         };
@@ -127,13 +128,13 @@ fn parse_args() -> Result<Args, pico_args::Error> {
                 match std::fs::read_to_string(get_config_dir() + "/last_run") {
                     Ok(o) => o.parse::<i32>().ok(),
                     Err(err) => {
-                        println!("Error reading from last_run: {}", err);
+                        warn!("Error reading from last_run: {}", err);
                         None
                     }
                 }
             }
             err => {
-                println!("Found other error {:?}", err);
+                warn!("Found other error {:?}", err);
                 None
             }
         },
@@ -247,7 +248,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
 
-        debug!(
+        info!(
             "Request recieved from logs.tf in {} seconds",
             start_time.elapsed().as_secs_f32()
         );
