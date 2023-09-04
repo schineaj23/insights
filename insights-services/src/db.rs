@@ -10,15 +10,15 @@ pub async fn insert_team(
     pool: &sqlx::PgPool,
     team_name: &str,
     team_id: &i32,
-) -> Result<(), Box<dyn Error>> {
-    sqlx::query(
+) -> Result<u64, Box<dyn Error>> {
+    let s = sqlx::query(
         "insert into team (team_id, team_name) VALUES ($1, $2) on conflict (team_id) do nothing",
     )
     .bind(&team_id)
     .bind(&team_name)
     .execute(pool)
     .await?;
-    Ok(())
+    Ok(s.rows_affected())
 }
 
 pub async fn insert_log(
@@ -26,11 +26,11 @@ pub async fn insert_log(
     log_id: &i32,
     teams: &(i32, i32),
     log_data: &LogSerialized,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<u64, Box<dyn Error>> {
     let red_score = log_data.teams.get("Red").unwrap().score as i32;
     let blu_score = log_data.teams.get("Blue").unwrap().score as i32;
 
-    sqlx::query(
+    let s = sqlx::query(
         "insert into log (log_id, unix_timestamp, map, red_team_id, blu_team_id, red_team_score, blu_team_score) values ($1, $2, $3, $4, $5, $6, $7) on conflict (log_id) do nothing")
         .bind(&log_id)
         .bind(&log_data.info.date)
@@ -42,21 +42,23 @@ pub async fn insert_log(
         .execute(pool)
         .await?;
 
-    Ok(())
+    Ok(s.rows_affected())
 }
 
 pub async fn insert_player(
     pool: &sqlx::PgPool,
     steam_id: &i64,
     team_id: &i32,
-) -> Result<(), Box<dyn Error>> {
-    sqlx::query("insert into player (steamid64) values ($1, ARRAY[$2]) on conflict do nothing")
-        .bind(&steam_id)
-        .bind(&team_id)
-        .execute(pool)
-        .await?;
+) -> Result<u64, Box<dyn Error>> {
+    let s = sqlx::query(
+        "insert into player (steamid64, teams) values ($1, ARRAY[$2]) on conflict (steamid64) do nothing",
+    )
+    .bind(&steam_id)
+    .bind(&team_id)
+    .execute(pool)
+    .await?;
 
-    Ok(())
+    Ok(s.rows_affected())
 }
 
 pub async fn insert_player_stats(
@@ -64,8 +66,8 @@ pub async fn insert_player_stats(
     log_id: &i32,
     player_id: &i64,
     stats: &PlayerStats,
-) -> Result<(), Box<dyn Error>> {
-    sqlx::query(
+) -> Result<u64, Box<dyn Error>> {
+    let s = sqlx::query(
         "insert into player_stats (log_id, player_steamid64, kills, deaths, dmg, dmg_real, dt, dt_real, hr, ubers, drops, headshots, headshots_hit) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
         .bind(&log_id)
         .bind(&player_id)
@@ -83,7 +85,7 @@ pub async fn insert_player_stats(
         .execute(pool)
         .await?;
 
-    Ok(())
+    Ok(s.rows_affected())
 }
 
 #[derive(FromRow, Clone)]
