@@ -23,7 +23,7 @@ path = "src/bin/import_team.rs"
 
 [workspace]
 
-members = ["analyzer", "importer", "analyzer/lambda-analyze-demo"]
+members = ["analyzer", "importer", "analyzer/lambda-analyze-demo", "log-insert"]
 
 
 [dependencies]
