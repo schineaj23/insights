@@ -21,16 +21,25 @@ path = "src/bin/migrate_names.rs"
 name = "teamporter"
 path = "src/bin/import_team.rs"
 
+[[bin]]
+name = "match-demo"
+path = "src/bin/match_demo.rs"
+
 [workspace]
 
-members = ["analyzer", "importer", "analyzer/lambda-analyze-demo", "log-insert"]
+members = [
+    "analyzer",
+    "importer",
+    "analyzer/lambda-analyze-demo",
+    "log-insert",
+    "match-demo",
+]
 
 
 [dependencies]
 reqwest = { version = "0.11.18", default-features = false, features = [
     "json",
     "rustls-tls",
-    "blocking"
 ] }
 tokio = { version = "1.28.2", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
