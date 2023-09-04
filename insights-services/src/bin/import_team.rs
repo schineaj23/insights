@@ -13,7 +13,7 @@ struct Args {
 fn parse_args() -> Args {
     let help: &str = "USAGE: teamporter -t FILE -s SEASON
         -t --team-list  Team list in JSON file
-        -s --season     Season number of players
+        -s --season     Season number (NOT season ID)
     ";
 
     let mut args: Vec<_> = std::env::args_os().collect();
@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // First create all the teams
     for (team_name, team) in team_map {
-        let res = sqlx::query::<Postgres>("insert into team (team_id, team_name, season) values ($1, $2, $3) on conflict do nothing")
+        let res = sqlx::query::<Postgres>("insert into team (team_id, team_name, season) values ($1, $2, $3) on conflict (team_id) do nothing")
         .bind(&team.id)
         .bind(&team_name)
         .bind(&args.season)
