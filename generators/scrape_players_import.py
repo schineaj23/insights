@@ -147,6 +147,7 @@ def main():
     args = vars(parser.parse_args())
 
     options = webdriver.FirefoxOptions()
+    options.add_argument("--allow-hosts")
     options.add_argument("-headless")
     driver = webdriver.Firefox(options=options)
     gen = PlayerGenerator(driver)
