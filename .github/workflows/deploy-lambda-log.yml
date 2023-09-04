@@ -1,9 +1,10 @@
-name: Deploy log-insert Lambda Function
+name: Deploy Log-Dependent Lambda Functions
 on:
   push:
     paths:
       - "insights-services/importer/**"
       - "insights-services/log-insert/**"
+      - "insights-services/match-demo/**"
   workflow_dispatch:
 
 env:
@@ -11,7 +12,7 @@ env:
 
 jobs:
   release:
-    name: Deploy Analyze Lambda Function
+    name: Deploy log-insert Lambda Function
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,3 +34,26 @@ jobs:
       - name: Deploy Lambda Function
         working-directory: ./insights-services
         run: aws lambda update-function-code --function-name log-insert --zip-file fileb://./target/lambda/log-insert/bootstrap.zip
+  match:
+    name: Deploy match-demo Lambda Function
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 1200
+          role-session-name: GithubActionsDeploy
+      - name: Setup Python
+        uses: actions/setup-python@v4.7.0
+      - name: Install cargo-lambda
+        run: pip3 install cargo-lambda
+      - name: Build Lambda Function
+        working-directory: ./insights-services/match-demo
+        run: cargo lambda build --release --arm64 --output-format zip
+      - name: Deploy Lambda Function
+        working-directory: ./insights-services
+        run: aws lambda update-function-code --function-name match-demo --zip-file fileb://./target/lambda/match-demo/bootstrap.zip
