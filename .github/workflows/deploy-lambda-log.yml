@@ -32,4 +32,4 @@ jobs:
         run: cargo lambda build --release --arm64 --output-format zip
       - name: Deploy Lambda Function
         working-directory: ./insights-services
-        run: aws lambda update-function-code --function-name analyze-demo --zip-file fileb://./target/lambda/log-insert/bootstrap.zip
+        run: aws lambda update-function-code --function-name log-insert --zip-file fileb://./target/lambda/log-insert/bootstrap.zip
