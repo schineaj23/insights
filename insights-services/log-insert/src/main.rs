@@ -6,6 +6,7 @@ use dotenv::dotenv;
 use importer::Importer;
 use insights::log;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
+use tracing::info;
 
 /// This is the main body for the function.
 /// Write your code inside it.
@@ -21,9 +22,11 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
 
     let records = event.payload.records;
     for record in records.iter() {
-        println!("Processing record: {:?}", record);
+        info!("Processing record: {:?}", record);
         let body = record.body.as_ref().unwrap();
+
         let log_id = body.parse::<i32>()?;
+
         let log = log::fetch_log(&log_id).await?;
         importer.import_log(log_id, &log).await?;
     }
