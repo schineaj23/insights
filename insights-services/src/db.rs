@@ -89,7 +89,7 @@ pub async fn insert_player_stats(
 }
 
 #[derive(FromRow, Clone)]
-pub struct ConnectedDemo {
+pub struct LegacyConnectedDemo {
     pub name: Option<String>,
     pub url: Option<String>,
     pub log_id: i32,
@@ -97,10 +97,11 @@ pub struct ConnectedDemo {
     pub map: String,
 }
 
+#[deprecated = "The connected_demos view is not used anymore"]
 pub async fn get_connected_demos(
     pool: &sqlx::PgPool,
-) -> Result<Vec<ConnectedDemo>, Box<dyn Error>> {
-    let demos = sqlx::query_as::<Postgres, ConnectedDemo>(
+) -> Result<Vec<LegacyConnectedDemo>, Box<dyn Error>> {
+    let demos = sqlx::query_as::<Postgres, LegacyConnectedDemo>(
         "select name, url, log_id, id, map from connected_demos",
     )
     .fetch_all(pool)

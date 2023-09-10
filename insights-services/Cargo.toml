@@ -33,6 +33,7 @@ members = [
     "analyzer/lambda-analyze-demo",
     "log-insert",
     "match-demo",
+    "bomb-attempt-insert",
 ]
 
 

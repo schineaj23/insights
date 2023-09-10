@@ -1,5 +1,5 @@
 use aws_lambda_events::event::sqs::SqsEvent;
-use insights::log;
+use insights::{demos::MatchedDemoMessage, log};
 use itertools::Itertools;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use steamid_ng::SteamID;
@@ -38,8 +38,8 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
             log.info.map, players_arg
         );
 
-        println!("Record {}: Log: https://logs.tf/{}", i, log_id);
-        println!("Record {}: Demo: {}", i, url);
+        info!("Record {}: Log: https://logs.tf/{}", i, log_id);
+        info!("Record {}: Demo: {}", i, url);
 
         let found = insights::demos::search_demo(&log.info.map, &players_arg).await?;
         if found.len() == 0 {
@@ -49,8 +49,14 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
 
         let queue_url = std::env::var("QUEUE_URL").expect("QUEUE_URL must be set!");
 
-        for demo_data in found.iter() {
-            let body = serde_json::to_string(demo_data)?;
+        for demo_data in found.into_iter() {
+            let message_body = MatchedDemoMessage {
+                log_id: log_id,
+                demo: demo_data,
+            };
+
+            let body = serde_json::to_string(&message_body)?;
+
             let message = client
                 .send_message()
                 .queue_url(&queue_url)

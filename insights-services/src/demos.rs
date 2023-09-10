@@ -25,6 +25,13 @@ pub struct DemoSerialized {
     pub path: String,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MatchedDemoMessage {
+    pub log_id: i32,
+    pub demo: DemoSerialized,
+}
+
 // Searches for demo based on map and players for 6v6.
 // Effectively replaces db::get_connected_demo if log is known
 pub async fn search_demo(map: &str, players: &str) -> Result<Vec<DemoSerialized>, Box<dyn Error>> {

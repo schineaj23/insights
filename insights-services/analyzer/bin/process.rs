@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use futures::StreamExt;
-use insights::db::{self, ConnectedDemo};
+use insights::db::{self, LegacyConnectedDemo};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use steamid_ng::SteamID;
 use tf_demo_parser::{
@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?
         .into();
 
-    let connected_demos: Vec<ConnectedDemo> = db::get_connected_demos(&pool)
+    let connected_demos: Vec<LegacyConnectedDemo> = db::get_connected_demos(&pool)
         .await?
         .into_iter()
         .filter(|x| x.id.is_some())
@@ -64,7 +64,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn process_demo(demo: &ConnectedDemo) -> Result<AnalyzerResult, Box<dyn std::error::Error>> {
+async fn process_demo(
+    demo: &LegacyConnectedDemo,
+) -> Result<AnalyzerResult, Box<dyn std::error::Error>> {
     let id = demo.id.as_ref().unwrap();
 
     println!("[Demo: {}] Starting download", id);
