@@ -55,7 +55,8 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
                 demo: demo_data,
             };
 
-            let body = serde_json::to_string(&message_body)?;
+            let b1 = serde_json::to_string(&message_body)?;
+            let body = serde_json::to_string(&b1)?;
 
             let message = client
                 .send_message()
@@ -63,6 +64,7 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
                 .message_body(&body)
                 .send()
                 .await?;
+            info!("body test: {}", body);
             info!("Record {}: Added to queue. Id: {:?}", i, message.message_id);
         }
     }

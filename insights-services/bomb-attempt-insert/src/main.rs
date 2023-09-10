@@ -17,7 +17,7 @@ enum AttemptInsertError {
 
 async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Error> {
     // Extract some useful information from the request
-    let url = std::env::var("LOGS_DATABASE_URL")?;
+    let url = std::env::var("LOG_DATABASE_URL")?;
     let pool = sqlx::PgPool::connect(&url).await?;
 
     let records = event.payload.records;
@@ -47,7 +47,12 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Error> {
                         demo_serialized.id, i, e
                     );
                 }
-                _ => {}
+                Ok(_) => {
+                    info!(
+                        "Record {}:[Demo {}, Attempt {}] insert_bomb_attempt: {}",
+                        record_id, body.log_id, i, id
+                    );
+                }
             }
         }
 

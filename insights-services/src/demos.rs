@@ -13,11 +13,11 @@ pub struct DemoSerialized {
     pub map: String,
     pub red: String,
     pub blue: String,
-    #[serde(rename(deserialize = "redScore"))]
+    #[serde(rename(deserialize = "redScore", serialize = "redScore"))]
     pub red_score: i32,
-    #[serde(rename(deserialize = "blueScore"))]
+    #[serde(rename(deserialize = "blueScore", serialize = "blueScore"))]
     pub blue_score: i32,
-    #[serde(rename(deserialize = "playerCount"))]
+    #[serde(rename(deserialize = "playerCount", serialize = "playerCount"))]
     pub player_count: i32,
     pub uploader: i32,
     pub hash: String,
