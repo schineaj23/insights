@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use log::debug;
+use log::{debug, warn};
 use tf_demo_parser::{
     demo::{
         data::{DemoTick, UserInfo},
@@ -315,7 +315,14 @@ impl BombAttemptAnalyzer {
     // TODO: possibly separate waddling skips vs high bombs, since small skip/spam gets detected if < 750, but fades dont?
     // Gets the distance to the closest player by iterating over every enemy and taking pythagorean distance
     fn in_range(&self, id: u16) -> bool {
-        let player: &Player = self.player_data.get(&id.into()).unwrap();
+        // FIXME: understand why this would ever be none, getting weird error logs on 2 demos
+        let player: &Player = match self.player_data.get(&id.into()) {
+            Some(p) => p,
+            None => {
+                warn!("THIS SHOULDN'T EVER HAPPEN! Failed to get player {}", id);
+                return false;
+            }
+        };
         let pos = player.position;
         let mut min = f32::MAX;
         self.player_data.iter().for_each(|(_, p)| {

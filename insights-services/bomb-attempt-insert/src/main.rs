@@ -29,6 +29,11 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Error> {
 
         let demo = &body.demo;
 
+        info!(
+            "Record {}: Demo {}: Starting demo download",
+            record_id, demo.id
+        );
+
         let demo_bytes = download_demo(&demo).await?;
 
         info!(

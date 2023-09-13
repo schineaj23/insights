@@ -56,14 +56,14 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
 
             let body = serde_json::to_string(&message_body)?;
 
-            let message = client
+            client
                 .send_message()
                 .queue_url(&queue_url)
                 .message_body(&body)
                 .send()
                 .await?;
 
-            info!("Record {}: Added to queue. Id: {:?}", i, message.message_id);
+            info!("Record {}: Added to queue. Id: {}", i, message_body.demo.id);
         }
     }
 
