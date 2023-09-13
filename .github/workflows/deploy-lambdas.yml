@@ -1,4 +1,4 @@
-name: Deploy Log-Dependent Lambda Functions
+name: Deploy Lambda Functions
 on:
   push:
     paths:
@@ -6,6 +6,7 @@ on:
       - "insights-services/log-insert/**"
       - "insights-services/match-demo/**"
       - "insights-services/bomb-attempt-insert/**"
+      - "insights-services/analyzer/**"
   workflow_dispatch:
 
 env:
@@ -81,3 +82,25 @@ jobs:
       - name: Deploy bomb-attempt-insert Function
         working-directory: ./insights-services
         run: aws lambda update-function-code --function-name bomb-attempt-insert --zip-file fileb://./target/lambda/bomb-attempt-insert/bootstrap.zip
+  analyze:
+    name: Deploy analyze-demo Lambda Function
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-region: us-east-1
+          role-duration-seconds: 1200
+          role-session-name: GithubActionsDeploy
+      - name: Setup Python
+        uses: actions/setup-python@v4.7.0
+      - name: Install cargo-lambda
+        run: pip3 install cargo-lambda
+      - name: Build Lambda Function
+        working-directory: ./insights-services/analyzer/lambda-analyze-demo
+        run: cargo lambda build --release --arm64 --output-format zip
+      - name: Deploy Lambda Function
+        working-directory: ./insights-services
+        run: aws lambda update-function-code --function-name analyze-demo --zip-file fileb://./target/lambda/analyze-demo/bootstrap.zip
