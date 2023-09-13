@@ -5,6 +5,7 @@ on:
       - "insights-services/importer/**"
       - "insights-services/log-insert/**"
       - "insights-services/match-demo/**"
+      - "insights-services/bomb-attempt-insert/**"
   workflow_dispatch:
 
 env:
@@ -35,7 +36,7 @@ jobs:
         working-directory: ./insights-services
         run: aws lambda update-function-code --function-name log-insert --zip-file fileb://./target/lambda/log-insert/bootstrap.zip
   match:
-    name: Deploy match-demo Lambda Function
+    name: Deploy match-demo and bomb-attempt-insert Lambda Functions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -51,9 +52,15 @@ jobs:
         uses: actions/setup-python@v4.7.0
       - name: Install cargo-lambda
         run: pip3 install cargo-lambda
-      - name: Build Lambda Function
+      - name: Build match-demo Function
         working-directory: ./insights-services/match-demo
         run: cargo lambda build --release --arm64 --output-format zip
-      - name: Deploy Lambda Function
+      - name: Deploy match-demo Function
         working-directory: ./insights-services
         run: aws lambda update-function-code --function-name match-demo --zip-file fileb://./target/lambda/match-demo/bootstrap.zip
+      - name: Build bomb-attempt-insert Function
+        working-directory: ./insights-services/bomb-attempt-insert
+        run: cargo lambda build --release --arm64 --output-format zip
+      - name: Deploy bomb-attempt-insert Function
+        working-directory: ./insights-services
+        run: aws lambda update-function-code --function-name bomb-attempt-insert --zip-file fileb://./target/lambda/bomb-attempt-insert/bootstrap.zip
