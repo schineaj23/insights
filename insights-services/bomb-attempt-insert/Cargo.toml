@@ -44,3 +44,4 @@ snafu = "0.7.5"
 
 tf-demo-parser = { git = "https://github.com/demostf/parser.git" }
 steamid-ng = "1.0.0"
+unescaper = "0.1.2"

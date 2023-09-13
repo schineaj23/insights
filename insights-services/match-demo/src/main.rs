@@ -3,7 +3,7 @@ use insights::{demos::MatchedDemoMessage, log};
 use itertools::Itertools;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use steamid_ng::SteamID;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 async fn load_credentials() -> aws_sdk_sqs::Client {
     let config = aws_config::load_from_env().await;
@@ -16,7 +16,6 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
 
     let records = event.payload.records;
     for (i, record) in records.iter().enumerate() {
-        info!("Processing record {}: {:?}", i, record);
         let body = record.body.as_ref().unwrap();
 
         let log_id = body.parse::<i32>()?;
@@ -38,8 +37,8 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
             log.info.map, players_arg
         );
 
-        info!("Record {}: Log: https://logs.tf/{}", i, log_id);
-        info!("Record {}: Demo: {}", i, url);
+        debug!("Record {}: Log: https://logs.tf/{}", i, log_id);
+        debug!("Record {}: Demo: {}", i, url);
 
         let found = insights::demos::search_demo(&log.info.map, &players_arg).await?;
         if found.len() == 0 {
@@ -55,8 +54,7 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
                 demo: demo_data,
             };
 
-            let b1 = serde_json::to_string(&message_body)?;
-            let body = serde_json::to_string(&b1)?;
+            let body = serde_json::to_string(&message_body)?;
 
             let message = client
                 .send_message()
@@ -64,7 +62,7 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Box<dyn st
                 .message_body(&body)
                 .send()
                 .await?;
-            info!("body test: {}", body);
+
             info!("Record {}: Added to queue. Id: {:?}", i, message.message_id);
         }
     }
