@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use log::{debug, warn};
 use tf_demo_parser::{
     demo::{
         data::{DemoTick, UserInfo},
@@ -18,6 +17,7 @@ use tf_demo_parser::{
     },
     MessageType, ParserState,
 };
+use tracing::{debug, warn};
 
 pub type AnalyzerResult = (
     Vec<BombAttempt>,

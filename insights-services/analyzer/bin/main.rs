@@ -1,8 +1,8 @@
 use analyzer::analyzer::BombAttempt;
-use log::debug;
 use pico_args::Arguments;
 use std::{collections::HashMap, fs, time::Instant};
 use steamid_ng::SteamID;
+use tracing::debug;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = Arguments::from_env();

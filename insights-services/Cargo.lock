@@ -56,7 +56,6 @@ dependencies = [
  "dotenv",
  "futures",
  "insights-services",
- "log",
  "pico-args",
  "reqwest",
  "serde",
@@ -64,6 +63,7 @@ dependencies = [
  "steamid-ng",
  "tf-demo-parser",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
